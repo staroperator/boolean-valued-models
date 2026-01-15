@@ -1,4 +1,4 @@
-import BooleanValuedModels.BVSet
+import BooleanValuedModels.BVSet.Defs
 import Mathlib.SetTheory.ZFC.Basic
 
 universe u v
@@ -77,9 +77,26 @@ theorem toBVSet_injective [Nontrivial B] : Function.Injective (toBVSet (B := B))
   intro x y h
   simpa [h, BVSet.eq_refl] using toBVSet_eq_toBVSet (B := B) (x := x) (y := y)
 
+theorem _root_.BVSet.IsExtentional.iInf_mem_toBVSet_himp {x : ZFSet.{v}} {f : BVSet B → B}
+    (hf : BVSet.IsExtentional f) : ⨅ y, y ∈ᴮ x.toBVSet ⇨ f y = ⨅ y : x, f y.1.toBVSet := by
+  simp_rw [mem_toBVSet, iSup_himp_eq]
+  rw [iInf_comm]
+  congr! with ⟨y, hy⟩
+  simp only
+  rw [hf.iInf_eq_himp]
+
+theorem _root_.BVSet.IsExtentional.iSup_mem_toBVSet_inf {x : ZFSet.{v}} {f : BVSet B → B}
+    (hf : BVSet.IsExtentional f) : ⨆ y, y ∈ᴮ x.toBVSet ⊓ f y = ⨆ y : x, f y.1.toBVSet := by
+  simp_rw [mem_toBVSet, iSup_inf_eq]
+  rw [iSup_comm]
+  congr! with ⟨y, hy⟩
+  simp only
+  rw [hf.iSup_eq_inf]
+
 theorem toBVSet_subset_toBVSet_of_subset {x y : ZFSet.{v}} (h : x ⊆ y) :
     x.toBVSet ⊆ᴮ y.toBVSet = (⊤ : B) := by
-  simp only [toBVSet_subset, iInf_eq_top, Subtype.forall]
+  rw [BVSet.subset_def', BVSet.IsExtentional.iInf_mem_toBVSet_himp (by fun_prop)]
+  simp only [iInf_eq_top, Subtype.forall]
   intro z hz
   exact toBVSet_mem_toBVSet_of_mem (h hz)
 

@@ -1,32 +1,11 @@
-import Mathlib.Order.CompleteBooleanAlgebra
+import BooleanValuedModels.BooleanAlgebra.Lemmas
 import Mathlib.Tactic.FunProp
-
-theorem iSup_himp_eq {α ι : Type*} [CompleteBooleanAlgebra α] {f : ι → α} {a} :
-    (⨆ x, f x) ⇨ a = ⨅ x, f x ⇨ a := by
-  refine eq_of_forall_le_iff fun b => ?_
-  simp [inf_iSup_eq]
-
-theorem himp_iInf_eq {α ι : Type*} [CompleteBooleanAlgebra α] {f : ι → α} {a} :
-    a ⇨ (⨅ x, f x) = ⨅ x, a ⇨ f x := by
-  simp [himp_eq, iInf_sup_eq]
-
-@[gcongr] theorem sup_congr {α : Type*} [Max α] {a b c d : α} (h₁ : a = c) (h₂ : b = d) : a ⊔ b = c ⊔ d :=
-  congr_arg₂ Max.max h₁ h₂
-
-@[gcongr] theorem inf_congr {α : Type*} [Min α] {a b c d : α} (h₁ : a = c) (h₂ : b = d) : a ⊓ b = c ⊓ d :=
-  congr_arg₂ Min.min h₁ h₂
-
-@[gcongr] theorem himp_congr {α : Type*} [HImp α] {a b c d : α} (h₁ : a = c) (h₂ : b = d) : a ⇨ b = c ⇨ d :=
-  congr_arg₂ HImp.himp h₁ h₂
-
-
 
 universe u v
 
 @[pp_with_univ]
 inductive BVSet (B : Type u)
 | mk (ι : Type v) (dom : ι → BVSet B) (val : ι → B)
-
 namespace BVSet
 
 variable {B : Type u}
@@ -174,6 +153,8 @@ theorem mem_congr_right' (u v w : BVSet B) : v =ᴮ w ⊓ u ∈ᴮ w ≤ u ∈�
   rw [eq_symm]
   apply mem_congr_right
 
+
+
 @[fun_prop] def IsExtentionalFun (f : BVSet.{u, v} B → BVSet.{u, v} B) :=
   ∀ x y, x =ᴮ y ≤ f x =ᴮ f y
 
@@ -187,6 +168,12 @@ theorem mem_congr_right' (u v w : BVSet B) : v =ᴮ w ⊓ u ∈ᴮ w ≤ u ∈�
 
 @[fun_prop] def IsExtentional (f : BVSet B → B) :=
   ∀ x y, x =ᴮ y ⊓ f x ≤ f y
+
+theorem IsExtentional.eq_inf_le (f) (hf : IsExtentional f) (u v : BVSet B) : u =ᴮ v ⊓ f u ≤ f v := hf u v
+
+theorem IsExtentional.eq_inf_le' (f) (hf : IsExtentional f) (u v : BVSet B) : v =ᴮ u ⊓ f u ≤ f v := by
+  rw [eq_symm]
+  apply hf
 
 @[fun_prop] theorem IsExtentional.const {a : B} : IsExtentional λ _ => a := λ x y => by simp
 
@@ -308,6 +295,24 @@ theorem IsExtentionalFun.of_isExtentional {f : BVSet B → BVSet B}
     rw [eq_symm]
     apply h
 
+theorem mem_inf_subset_le (u v w : BVSet B) : u ∈ᴮ v ⊓ v ⊆ᴮ w ≤ u ∈ᴮ w := by
+  grw [subset_def', iInf_le _ u, inf_himp_le]
+
+theorem subset_inf_mem_le (u v w : BVSet B) : v ⊆ᴮ w ⊓ u ∈ᴮ v ≤ u ∈ᴮ w := by
+  rw [inf_comm]
+  apply mem_inf_subset_le
+
+theorem subset_refl (u) : u ⊆ᴮ u = (⊤ : B) := by
+  simp [subset_def']
+
+theorem subset_trans (u v w : BVSet B) : u ⊆ᴮ v ⊓ v ⊆ᴮ w ≤ u ⊆ᴮ w := by
+  simp only [subset_def', le_iInf_iff, le_himp_iff]
+  intro x
+  grw [iInf_le _ x, iInf_le _ x, inf_right_comm, himp_inf_le, inf_himp_le]
+
+theorem subset_trans' (u v w : BVSet B) : v ⊆ᴮ w ⊓ u ⊆ᴮ v ≤ u ⊆ᴮ w := by
+  rw [inf_comm]
+  apply subset_trans
 
 
 instance : Setoid (BVSet B) where
@@ -358,6 +363,8 @@ theorem IsExtentional.congr {f} (hf : IsExtentional f) (h : u ≈ v) : f u = f v
   · exact IsExtentional.congr (f := (· ⊆ᴮ v₁)) (by fun_prop) h₁
   · exact IsExtentional.congr (by fun_prop) h₂
 
+
+
 def empty : BVSet B :=
   ⟨PEmpty, nofun, nofun⟩
 
@@ -367,6 +374,9 @@ instance : Nonempty (BVSet B) := ⟨∅⟩
 @[simp] theorem mem_empty : u ∈ᴮ ∅ = ⊥ := by
   simp [EmptyCollection.emptyCollection, empty, mem_def]
 
+@[simp] theorem empty_subset : ∅ ⊆ᴮ u = ⊤ := by
+  simp [subset_def']
+
 protected def insert (u v : BVSet.{u, v} B) : BVSet B :=
   ⟨Option v.Index, (·.elim u v.dom), (·.elim ⊤ v.val)⟩
 
@@ -374,6 +384,14 @@ instance : Insert (BVSet B) (BVSet B) := ⟨BVSet.insert⟩
 
 @[simp] theorem mem_insert : u ∈ᴮ insert v w = u =ᴮ v ⊔ u ∈ᴮ w := by
   simp [insert, BVSet.insert, mem_def, iSup_option]
+
+theorem mem_insert_self : u ∈ᴮ insert u v = ⊤ := by
+  simp [eq_refl]
+
+theorem le_subset_insert : u ⊆ᴮ w ≤ u ⊆ᴮ insert v w := by
+  simp only [subset_def', mem_insert, le_iInf_iff, le_himp_iff]
+  intro x
+  grw [iInf_le _ x, himp_inf_le, ← le_sup_right]
 
 @[fun_prop] theorem IsExtentionalFun.insert {f g : BVSet B → BVSet B}
     (hf : IsExtentionalFun f) (hg : IsExtentionalFun g) : IsExtentionalFun λ x => insert (f x) (g x) := by
@@ -406,27 +424,27 @@ instance : Singleton (BVSet B) (BVSet B) := ⟨(insert · ∅)⟩
   apply IsExtentionalFun.congr _ h
   fun_prop
 
-def union (u : BVSet.{u, v} B) : BVSet B :=
+def sUnion (u : BVSet.{u, v} B) : BVSet B :=
   ⟨Σ x : u, (x : BVSet B).Index, fun ⟨_, y⟩ => y, fun ⟨x, y⟩ => u x ⊓ (x : BVSet B) y⟩
 
-prefix:110 "⋃ᴮ " => union
+prefix:110 "⋃ᴮ " => sUnion
 
-theorem mem_union : u ∈ᴮ ⋃ᴮ v = ⨆ x : v, v x ⊓ u ∈ᴮ x := by
-  conv_lhs => simp only [union, mem_def, Index_mk, val_mk, dom_mk]
+theorem mem_sUnion' : u ∈ᴮ ⋃ᴮ v = ⨆ x : v, v x ⊓ u ∈ᴮ x := by
+  conv_lhs => simp only [sUnion, mem_def, Index_mk, val_mk, dom_mk]
   simp only [iSup_sigma]
   simp_rw [inf_assoc, ← inf_iSup_eq, ← mem_def]
 
-theorem mem_union' : u ∈ᴮ ⋃ᴮ v = ⨆ x, x ∈ᴮ v ⊓ u ∈ᴮ x := by
-  rw [mem_union, IsExtentional.iSup_mem_inf (by fun_prop)]
+@[simp] theorem mem_sUnion : u ∈ᴮ ⋃ᴮ v = ⨆ x, x ∈ᴮ v ⊓ u ∈ᴮ x := by
+  rw [mem_sUnion', IsExtentional.iSup_mem_inf (by fun_prop)]
 
-@[fun_prop] theorem IsExtentionalFun.union {f : BVSet B → BVSet B}
+@[fun_prop] theorem IsExtentionalFun.sUnion {f : BVSet B → BVSet B}
     (hf : IsExtentionalFun f) : IsExtentionalFun λ x => ⋃ᴮ (f x) := by
   apply of_isExtentional
   intro x
-  simp only [mem_union']
+  simp only [mem_sUnion]
   fun_prop
 
-@[gcongr] theorem union_congr {u v : BVSet B} (h : u ≈ v) : ⋃ᴮ u ≈ ⋃ᴮ v := by
+@[gcongr] theorem sUnion_congr {u v : BVSet B} (h : u ≈ v) : ⋃ᴮ u ≈ ⋃ᴮ v := by
   apply IsExtentionalFun.congr _ h
   fun_prop
 
@@ -498,6 +516,11 @@ theorem mem_sep' {f} (hf : IsExtentional f) : u ∈ᴮ sep v f = u ∈ᴮ v ⊓ 
   · simp only [le_inf_iff, inf_le_left, and_true]
     apply hf
 
+@[gcongr] theorem sep_congr {f} (h : u ≈ v) (hf : IsExtentional f) : sep u f ≈ sep v f := by
+  apply ext
+  intro x
+  grw [mem_sep' hf, mem_sep' hf, h]
+
 def replace (u : BVSet B) (f : BVSet B → BVSet B) : BVSet B :=
   ⟨u.Index, fun i => f i, fun i => u i⟩
 
@@ -506,5 +529,12 @@ theorem mem_replace {f} : u ∈ᴮ replace v f = ⨆ x : v, v x ⊓ u =ᴮ f x :
   
 theorem mem_replace' {f} (hf : IsExtentionalFun f) : u ∈ᴮ replace v f = ⨆ x : BVSet B, x ∈ᴮ v ⊓ u =ᴮ f x := by
   rw [mem_replace, IsExtentional.iSup_mem_inf (by fun_prop)]
+
+@[gcongr] theorem sep_replace {f} (h : u ≈ v) (hf : IsExtentionalFun f) : replace u f ≈ replace v f := by
+  apply ext
+  intro x
+  rw [mem_replace' hf, mem_replace' hf]
+  congr! 2 with y
+  grw [h]
 
 end BVSet

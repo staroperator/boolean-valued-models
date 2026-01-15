@@ -1,11 +1,5 @@
-import BooleanValuedModels.BVSet
+import BooleanValuedModels.BVSet.Defs
 import Mathlib.SetTheory.Cardinal.Order
-
-lemma biSup_lt_eq_biSup_lt_biSup_le {α ι} [CompleteLattice α] [Preorder ι] {f : ι → α} {i} :
-    ⨆ j < i, f j = ⨆ j < i, ⨆ k ≤ j, f k := by
-  apply le_antisymm
-  · exact iSup₂_le fun j hj => le_iSup₂_of_le j hj (le_biSup f (le_refl j))
-  · exact iSup₂_le fun j hj => iSup₂_le fun k hk => le_biSup f (hk.trans_lt hj)
 
 variable {B : Type u} [CompleteBooleanAlgebra B]
 
