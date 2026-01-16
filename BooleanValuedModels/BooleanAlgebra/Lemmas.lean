@@ -11,6 +11,28 @@ import Mathlib.Order.CompleteBooleanAlgebra
 
 attribute [gcongr] himp_le_himp
 
+theorem compl_himp_eq {α : Type*} [BooleanAlgebra α] {a b : α} :
+    aᶜ ⇨ b = a ⊔ b := by
+  rw [himp_eq, compl_compl, sup_comm]
+
+theorem compl_himp_eq' {α : Type*} [BooleanAlgebra α] {a b : α} :
+    aᶜ ⇨ b = b ⊔ a := by
+  rw [compl_himp_eq, sup_comm]
+
+theorem compl_inf' {α : Type*} [BooleanAlgebra α] {a b : α} :
+    (a ⊓ b)ᶜ = a ⇨ bᶜ := by
+  rw [inf_comm]
+  simp [himp_eq]
+
+theorem le_of_inf_le {α : Type*} [BooleanAlgebra α] {a b c : α} :
+    a ≤ b → a ⊓ b ≤ c → a ≤ c := by
+  intro h₁ h₂
+  grw [← h₂, inf_eq_left.2 h₁]
+
+theorem inf_compl_le_bot {α : Type*} [BooleanAlgebra α] {a b : α} :
+    a ⊓ bᶜ ≤ ⊥ ↔ a ≤ b := by
+  conv_rhs => rw [← compl_compl b, ← himp_bot, le_himp_iff]
+
 theorem iSup_himp_eq {α ι : Type*} [CompleteBooleanAlgebra α] {f : ι → α} {a} :
     (⨆ x, f x) ⇨ a = ⨅ x, f x ⇨ a := by
   refine eq_of_forall_le_iff fun b => ?_

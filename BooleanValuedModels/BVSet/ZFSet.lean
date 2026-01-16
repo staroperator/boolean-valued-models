@@ -72,6 +72,11 @@ theorem toBVSet_eq_toBVSet {x y : ZFSet.{v}} [Decidable (x = y)] :
     x.toBVSet =ᴮ y.toBVSet = if x = y then (⊤ : B) else ⊥ := by
   convert (toBVSet_aux x).2.2 y
 
+theorem toBVSet_eq_toBVSet_of_ne {x y : ZFSet.{v}} (h : x ≠ y) :
+    x.toBVSet =ᴮ y.toBVSet = (⊥ : B) := by
+  classical
+  simp [toBVSet_eq_toBVSet, h]
+
 theorem toBVSet_injective [Nontrivial B] : Function.Injective (toBVSet (B := B)) := by
   classical
   intro x y h

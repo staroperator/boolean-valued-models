@@ -28,7 +28,7 @@ theorem le_sum_eq (ha : ∀ i j, i ≠ j → a i ⊓ a j ≤ u i =ᴮ u j) {i} :
     simp only [sum, val_mk, dom_mk, BVSet.eq_refl, le_top, inf_of_le_left, le_inf_iff, inf_le_left,
       true_and]
     apply inf_le_of_right_le
-    exact val_le_mem
+    exact val_le_dom_mem
 
 theorem le_sum_eq_of_pairwise_disjoint (ha : ∀ i j, i ≠ j → Disjoint (a i) (a j)) {i} : a i ≤ sum ι a u =ᴮ u i :=
   le_sum_eq fun i j hij => le_of_eq_of_le (ha i j hij).eq_bot bot_le
