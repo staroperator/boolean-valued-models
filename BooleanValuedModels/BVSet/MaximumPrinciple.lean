@@ -1,22 +1,23 @@
 import BooleanValuedModels.BVSet.Defs
+import Mathlib.Logic.Small.Basic
 import Mathlib.SetTheory.Cardinal.Order
 
 variable {B : Type u} [CompleteBooleanAlgebra B]
 
 namespace BVSet
 
-def sum (ι : Type v) (a : ι → B) (u : ι → BVSet B) : BVSet B :=
+def mix (ι : Type v) (a : ι → B) (u : ι → BVSet B) : BVSet B :=
   mk (Σ i, (u i).Index) (fun ⟨_, x⟩ => x) fun ⟨i, x⟩ => a i ⊓ x ∈ᴮ u i
 
 variable {ι : Type v} {a : ι → B} {u : ι → BVSet B}
 
 /-- Mixing lemma. -/
-theorem le_sum_eq (ha : ∀ i j, i ≠ j → a i ⊓ a j ≤ u i =ᴮ u j) {i} : a i ≤ sum ι a u =ᴮ u i := by
+theorem le_mix_eq (ha : ∀ i j, i ≠ j → a i ⊓ a j ≤ u i =ᴮ u j) {i} : a i ≤ mix ι a u =ᴮ u i := by
   rw [eq_def, subset_def, subset_def]
   simp only [le_inf_iff, le_iInf_iff, le_himp_iff]
   constructor
   · intro ⟨j, x⟩
-    simp only [sum, val_mk, dom_mk, ge_iff_le]
+    simp only [mix, val_mk, dom_mk, ge_iff_le]
     by_cases hij : i = j
     · subst hij
       simp
@@ -25,24 +26,25 @@ theorem le_sum_eq (ha : ∀ i j, i ≠ j → a i ⊓ a j ≤ u i =ᴮ u j) {i} :
   · intro j
     simp only [mem_def]
     apply le_iSup_of_le ⟨i, j⟩
-    simp only [sum, val_mk, dom_mk, BVSet.eq_refl, le_top, inf_of_le_left, le_inf_iff, inf_le_left,
+    simp only [mix, val_mk, dom_mk, BVSet.eq_refl, le_top, inf_of_le_left, le_inf_iff, inf_le_left,
       true_and]
     apply inf_le_of_right_le
     exact val_le_dom_mem
 
-theorem le_sum_eq_of_pairwise_disjoint (ha : ∀ i j, i ≠ j → Disjoint (a i) (a j)) {i} : a i ≤ sum ι a u =ᴮ u i :=
-  le_sum_eq fun i j hij => le_of_eq_of_le (ha i j hij).eq_bot bot_le
+theorem le_mix_eq_of_pairwise_disjoint (ha : ∀ i j, i ≠ j → Disjoint (a i) (a j)) {i} :
+    a i ≤ mix ι a u =ᴮ u i :=
+  le_mix_eq fun i j hij => le_of_eq_of_le (ha i j hij).eq_bot bot_le
 
 end BVSet
 
 open BVSet
 
 /-- Maximum principle. -/
-theorem SetTheory.Formula.exists_eq_iSup {f : BVSet.{u, max u v} B → B} (hf : IsExtentional f) :
-    ∃ u, f u = ⨆ x, f x := by
-  let ι : Type _ := Id { a // ∃ u, f u = a }
+theorem SetTheory.Formula.exists_eq_iSup [Small.{v} B] {f : BVSet.{u, v} B → B}
+    (hf : IsExtentional f) : ∃ u, f u = ⨆ x, f x := by
+  let ι : Type v := Shrink { a // ∃ u, f u = a }
   rcases exists_wellOrder ι with ⟨hlo, hwo⟩
-  let u : ι → BVSet B := fun ⟨_, h⟩ => Classical.choose h
+  let u : ι → BVSet B := fun i => Classical.choose ((equivShrink _).symm i).2
   let a : ι → B := fun i => f (u i) \ ⨆ j < i, f (u j)
   have ha₁ : ∀ i, a i ≤ f (u i) := by simp [a]
   have ha₂ : ∀ i, ⨆ j ≤ i, a j = ⨆ j ≤ i, f (u j) := by
@@ -58,15 +60,15 @@ theorem SetTheory.Formula.exists_eq_iSup {f : BVSet.{u, max u v} B → B} (hf : 
     simp only [a, sdiff_eq, compl_iSup]
     nth_grw 2 [inf_le_right]
     grw [iInf₂_le j hij, compl_inf_self]
-  exists sum ι a u
+  exists mix ι a u
   apply le_antisymm
-  · exact le_iSup f (sum ι a u)
+  · exact le_iSup f (mix ι a u)
   · trans ⨆ i, f (u i)
     · rw [iSup_le_iff]
       intro x
-      let i : ι := ⟨f x, x, rfl⟩
+      let i : ι := equivShrink _ ⟨f x, x, rfl⟩
       refine le_iSup_of_le i (ge_of_eq ?_)
-      simp only [u, i]
+      simp only [u, i, Equiv.symm_apply_apply]
       exact Classical.choose_spec (p := fun y => f y = f x) _
     trans ⨆ i, a i
     · rw [iSup_le_iff]
@@ -79,12 +81,12 @@ theorem SetTheory.Formula.exists_eq_iSup {f : BVSet.{u, max u v} B → B} (hf : 
     · rw [iSup_le_iff]
       intro i
       rw [← inf_idem (a i)]
-      trans sum ι a u =ᴮ u i ⊓ a i
+      trans mix ι a u =ᴮ u i ⊓ a i
       · gcongr
-        refine le_sum_eq_of_pairwise_disjoint fun i j hij => ?_
+        refine le_mix_eq_of_pairwise_disjoint fun i j hij => ?_
         rw [disjoint_iff]
         rcases hij.lt_or_gt with hij | hij
         · rw [inf_comm]
           exact ha₃ j i hij
         · exact ha₃ i j hij
-      · grw [ha₁ i, BVSet.eq_symm, hf (u i) (sum ι a u)]
+      · grw [ha₁ i, BVSet.eq_symm, hf (u i) (mix ι a u)]

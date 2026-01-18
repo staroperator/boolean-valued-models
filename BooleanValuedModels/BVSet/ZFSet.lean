@@ -3,7 +3,7 @@ import Mathlib.SetTheory.ZFC.Basic
 
 universe u v
 
-variable {B : Type u} [CompleteBooleanAlgebra B]
+variable {B : Type u} [CompleteBooleanAlgebra B] {u : BVSet.{u, v} B} {x y z : ZFSet.{v}}
 
 namespace ZFSet
 
@@ -11,12 +11,12 @@ def toBVSet (x : ZFSet.{v}) : BVSet.{u, v} B :=
   ⟨Shrink x, fun y => ((equivShrink x).symm y).1.toBVSet, fun _ => ⊤⟩
 termination_by x
 
-theorem mem_toBVSet {x : ZFSet.{v}} {u : BVSet.{u, v} B} :
+theorem mem_toBVSet :
     u ∈ᴮ x.toBVSet = ⨆ y : x, u =ᴮ y.1.toBVSet := by
   rw [toBVSet]
   simp [BVSet.mem_def, ← (equivShrink x).symm.iSup_comp]
 
-theorem toBVSet_subset {x : ZFSet.{v}} {u : BVSet.{u, v} B} :
+theorem toBVSet_subset :
     x.toBVSet ⊆ᴮ u = ⨅ y : x, y.1.toBVSet ∈ᴮ u:= by
   rw [toBVSet]
   simp [BVSet.subset_def, ← (equivShrink x).symm.iInf_comp]
@@ -59,30 +59,27 @@ private theorem toBVSet_aux (x : ZFSet.{v}) :
     · aesop
   exact ⟨h₃, h₁, h₂⟩
 
-theorem toBVSet_mem_toBVSet {x y : ZFSet.{v}} [Decidable (x ∈ y)] :
-    x.toBVSet ∈ᴮ y.toBVSet = if x ∈ y then (⊤ : B) else ⊥ := by
-  convert (toBVSet_aux x).1 y
-
-theorem toBVSet_mem_toBVSet_of_mem {x y : ZFSet.{v}} (h : x ∈ y) :
+theorem toBVSet_mem_toBVSet_of_mem (h : x ∈ y) :
     x.toBVSet ∈ᴮ y.toBVSet = (⊤ : B) := by
-  classical
-  simp [toBVSet_mem_toBVSet, h]
+  convert (toBVSet_aux x).1 y
+  simp [h]
 
-theorem toBVSet_eq_toBVSet {x y : ZFSet.{v}} [Decidable (x = y)] :
-    x.toBVSet =ᴮ y.toBVSet = if x = y then (⊤ : B) else ⊥ := by
-  convert (toBVSet_aux x).2.2 y
+theorem toBVSet_mem_toBVSet_of_notMem (h : x ∉ y) :
+    x.toBVSet ∈ᴮ y.toBVSet = (⊥ : B) := by
+  convert (toBVSet_aux x).1 y
+  simp [h]
 
-theorem toBVSet_eq_toBVSet_of_ne {x y : ZFSet.{v}} (h : x ≠ y) :
+theorem toBVSet_eq_toBVSet_of_ne (h : x ≠ y) :
     x.toBVSet =ᴮ y.toBVSet = (⊥ : B) := by
-  classical
-  simp [toBVSet_eq_toBVSet, h]
+  convert (toBVSet_aux x).2.2 y
+  simp [h]
 
 theorem toBVSet_injective [Nontrivial B] : Function.Injective (toBVSet (B := B)) := by
   classical
   intro x y h
-  simpa [h, BVSet.eq_refl] using toBVSet_eq_toBVSet (B := B) (x := x) (y := y)
+  simpa [h] using (toBVSet_aux (B := B) x).2.2 y
 
-theorem _root_.BVSet.IsExtentional.iInf_mem_toBVSet_himp {x : ZFSet.{v}} {f : BVSet B → B}
+theorem _root_.BVSet.IsExtentional.iInf_mem_toBVSet_himp {f : BVSet B → B}
     (hf : BVSet.IsExtentional f) : ⨅ y, y ∈ᴮ x.toBVSet ⇨ f y = ⨅ y : x, f y.1.toBVSet := by
   simp_rw [mem_toBVSet, iSup_himp_eq]
   rw [iInf_comm]
@@ -90,7 +87,7 @@ theorem _root_.BVSet.IsExtentional.iInf_mem_toBVSet_himp {x : ZFSet.{v}} {f : BV
   simp only
   rw [hf.iInf_eq_himp]
 
-theorem _root_.BVSet.IsExtentional.iSup_mem_toBVSet_inf {x : ZFSet.{v}} {f : BVSet B → B}
+theorem _root_.BVSet.IsExtentional.iSup_mem_toBVSet_inf {f : BVSet B → B}
     (hf : BVSet.IsExtentional f) : ⨆ y, y ∈ᴮ x.toBVSet ⊓ f y = ⨆ y : x, f y.1.toBVSet := by
   simp_rw [mem_toBVSet, iSup_inf_eq]
   rw [iSup_comm]
@@ -98,18 +95,18 @@ theorem _root_.BVSet.IsExtentional.iSup_mem_toBVSet_inf {x : ZFSet.{v}} {f : BVS
   simp only
   rw [hf.iSup_eq_inf]
 
-theorem toBVSet_subset_toBVSet_of_subset {x y : ZFSet.{v}} (h : x ⊆ y) :
+theorem toBVSet_subset_toBVSet_of_subset (h : x ⊆ y) :
     x.toBVSet ⊆ᴮ y.toBVSet = (⊤ : B) := by
   rw [BVSet.subset_def', BVSet.IsExtentional.iInf_mem_toBVSet_himp (by fun_prop)]
   simp only [iInf_eq_top, Subtype.forall]
   intro z hz
   exact toBVSet_mem_toBVSet_of_mem (h hz)
 
-theorem toBVSet_empty : toBVSet (B := B) ∅ ≈ ∅ := by
+theorem toBVSet_empty : (toBVSet ∅ : BVSet B) ≈ ∅ := by
   apply BVSet.ext
   simp [mem_toBVSet]
 
-theorem toBVSet_insert {x y} : toBVSet (B := B) (insert x y) ≈ insert (toBVSet x) (toBVSet y) := by
+theorem toBVSet_insert : (insert x y).toBVSet ≈ insert (x.toBVSet : BVSet B) (y.toBVSet : BVSet B) := by
   apply BVSet.ext
   simp only [mem_toBVSet, BVSet.mem_insert]
   intro z
@@ -128,4 +125,30 @@ theorem toBVSet_insert {x y} : toBVSet (B := B) (insert x y) ≈ insert (toBVSet
       apply le_iSup_of_le ⟨a, by simp [ha]⟩
       simp
 
+theorem toBVSet_singleton : (({x} : ZFSet).toBVSet : BVSet B) ≈ {(x.toBVSet : BVSet B)} := by
+  change toBVSet (insert x ∅) ≈ insert (toBVSet x) ∅
+  grw [toBVSet_insert, toBVSet_empty]
+
 end ZFSet
+
+namespace BVSet
+
+def omega : BVSet B := ZFSet.omega.toBVSet
+
+notation "ωᴮ" => omega
+
+theorem empty_mem_omega : ∅ ∈ᴮ ωᴮ = (⊤ : B) := by
+  grw [← ZFSet.toBVSet_empty]
+  exact ZFSet.toBVSet_mem_toBVSet_of_mem (ZFSet.omega_zero)
+
+theorem le_succ_mem_omega {u : BVSet B} : u ∈ᴮ ωᴮ ≤ insert u u ∈ᴮ ωᴮ := by
+  unfold omega
+  rw [ZFSet.mem_toBVSet, ZFSet.mem_toBVSet]
+  apply iSup_le
+  intro ⟨x, hx⟩
+  apply le_iSup_of_le ⟨insert x x, ZFSet.omega_succ hx⟩
+  grw [← IsExtentional.eq_inf_le' (fun y => insert y y =ᴮ ZFSet.toBVSet _) (by fun_prop) x.toBVSet,
+    ← ZFSet.toBVSet_insert]
+  simp
+
+end BVSet

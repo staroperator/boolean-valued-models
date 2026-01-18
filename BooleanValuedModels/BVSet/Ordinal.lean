@@ -98,7 +98,7 @@ theorem isOrdinal_inf_mem_le_isOrdinal :
 
 theorem isOrdinal_inf_subset_le_mem_sup_eq :
     isOrdinal u ⊓ isOrdinal v ⊓ v ⊆ᴮ u ≤ v ∈ᴮ u ⊔ v =ᴮ u := by
-  rw [← compl_himp_eq', le_himp_iff, ← ne_def]
+  rw [← compl_himp_eq', le_himp_iff]
   apply le_of_inf_le (b := (u \ v) ≠ᴮ ∅)
   · grw [inf_assoc, inf_le_right, subset_inf_ne_le]
   · grw [regularity, inf_iSup_eq]
@@ -115,7 +115,7 @@ theorem isOrdinal_inf_subset_le_mem_sup_eq :
             grw [isOrdinal_le_isTransitive]
           · grw [inf_le_left, inf_le_left, inf_le_right]
         · grw [inf_le_right]
-      · rw [← inf_compl_le_bot, ← ne_def, inf_assoc]
+      · rw [← inf_compl_le_bot, inf_assoc]
         grw [subset_inf_ne_le, regularity, inf_iSup_eq]
         apply iSup_le
         intro y
@@ -261,25 +261,5 @@ theorem IsExtentional.iSup_isOrdinal_inf {f} (hf : IsExtentional f) :
   rw [iSup_comm]
   congr! with o
   rw [hf.iSup_eq_inf]
-
-
-
-def omega : BVSet B := ZFSet.omega.toBVSet
-
-notation "ωᴮ" => omega
-
-theorem empty_mem_omega : ∅ ∈ᴮ ωᴮ = (⊤ : B) := by
-  grw [← ZFSet.toBVSet_empty]
-  exact ZFSet.toBVSet_mem_toBVSet_of_mem (ZFSet.omega_zero)
-
-theorem le_succ_mem_omega : u ∈ᴮ ωᴮ ≤ insert u u ∈ᴮ ωᴮ := by
-  unfold omega
-  rw [ZFSet.mem_toBVSet, ZFSet.mem_toBVSet]
-  apply iSup_le
-  intro ⟨x, hx⟩
-  apply le_iSup_of_le ⟨insert x x, ZFSet.omega_succ hx⟩
-  grw [← IsExtentional.eq_inf_le' (fun y => insert y y =ᴮ ZFSet.toBVSet _) (by fun_prop) x.toBVSet,
-    ← ZFSet.toBVSet_insert]
-  simp
 
 end BVSet

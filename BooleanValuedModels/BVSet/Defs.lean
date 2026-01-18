@@ -1,4 +1,5 @@
 import BooleanValuedModels.BooleanAlgebra.Lemmas
+import Mathlib.Logic.Small.Defs
 import Mathlib.Tactic.FunProp
 
 universe u v
@@ -9,7 +10,7 @@ inductive BVSet (B : Type u)
 
 namespace BVSet
 
-variable {B : Type u}
+variable {B : Type u} {u v w : BVSet B}
 
 def Index : BVSet B → Type v
 | mk ι _ _ => ι
@@ -45,11 +46,13 @@ def eq : BVSet.{u, v} B → BVSet.{u, v} B → B
     ⨅ y : v, vval y ⇨ ⨆ x : u, uval x ⊓ (udom x).eq (vdom y)
 
 infix:70 " =ᴮ " => eq
+notation:70 u " ≠ᴮ " v:70 => (u =ᴮ v)ᶜ
 
 def mem : BVSet.{u, v} B → BVSet.{u, v} B → B
 | u, v => ⨆ x : v, v x ⊓ u.eq x
 
 infix:70 " ∈ᴮ " => mem
+notation:70 u " ∉ᴮ " v:70 => (u ∈ᴮ v)ᶜ
 
 def subset : BVSet.{u, v} B → BVSet.{u, v} B → B
 | u, v => ⨅ x : u, u x ⇨ (x : BVSet B).mem v
@@ -69,11 +72,11 @@ theorem eq_symm (u v : BVSet B) : u =ᴮ v = v =ᴮ u := by
   conv_lhs => rw [inf_comm]
   congr! 7 <;> apply eq_symm
 
-theorem mem_def {u v : BVSet B} : u ∈ᴮ v = ⨆ x : v, v x ⊓ u =ᴮ x := rfl
+theorem mem_def : u ∈ᴮ v = ⨆ x : v, v x ⊓ u =ᴮ x := rfl
 
-theorem subset_def {u v : BVSet B} : u ⊆ᴮ v = ⨅ x : u, u x ⇨ x ∈ᴮ v := rfl
+theorem subset_def : u ⊆ᴮ v = ⨅ x : u, u x ⇨ x ∈ᴮ v := rfl
 
-theorem eq_def {u v : BVSet B} : u =ᴮ v = u ⊆ᴮ v ⊓ v ⊆ᴮ u := by
+theorem eq_def : u =ᴮ v = u ⊆ᴮ v ⊓ v ⊆ᴮ u := by
   rcases u with ⟨u, udom, uval⟩
   rcases v with ⟨v, vdom, vval⟩
   rw [BVSet.eq, BVSet.subset, BVSet.subset]
@@ -81,12 +84,18 @@ theorem eq_def {u v : BVSet B} : u =ᴮ v = u ⊆ᴮ v ⊓ v ⊆ᴮ u := by
   conv_rhs => enter [2, 1, x, 2, 1, y]; rw [eq_symm]
   rfl
 
-lemma eq_inf_val_le_mem {u v : BVSet B} {x : u} : u =ᴮ v ⊓ u x ≤ x ∈ᴮ v := by
+theorem eq_le_subset : u =ᴮ v ≤ u ⊆ᴮ v := by
+  grw [eq_def, inf_le_left]
+
+theorem eq_le_subset' : u =ᴮ v ≤ v ⊆ᴮ u := by
+  grw [eq_def, inf_le_right]
+
+lemma eq_inf_val_le_mem {x : u} : u =ᴮ v ⊓ u x ≤ x ∈ᴮ v := by
   rw [eq_def, subset_def]
   apply (inf_le_inf_right _ (inf_le_of_left_le (iInf_le _ x))).trans
   simp
 
-lemma eq_inf_val_le_mem' {u v : BVSet B} {x : v} : u =ᴮ v ⊓ v x ≤ x ∈ᴮ u := by
+lemma eq_inf_val_le_mem' {x : v} : u =ᴮ v ⊓ v x ≤ x ∈ᴮ u := by
   rw [eq_symm]
   exact eq_inf_val_le_mem
 
@@ -126,8 +135,6 @@ theorem eq_trans (u v w : BVSet B) : u =ᴮ v ⊓ v =ᴮ w ≤ u =ᴮ w := by
     apply inf_le_inf_left
     apply eq_trans
 
-variable {u v w : BVSet B}
-
 theorem eq_trans' (u v w : BVSet B) : v =ᴮ w ⊓ u =ᴮ v ≤ u =ᴮ w := by
   rw [inf_comm]
   apply eq_trans
@@ -164,6 +171,9 @@ theorem mem_congr_right' (u v w : BVSet B) : v =ᴮ w ⊓ u ∈ᴮ w ≤ u ∈�
 @[fun_prop] def IsExtentionalFun (f : BVSet.{u, v} B → BVSet.{u, v} B) :=
   ∀ x y, x =ᴮ y ≤ f x =ᴮ f y
 
+theorem IsExtentionalFun.eq_le_eq (f) (hf : IsExtentionalFun f) (u v : BVSet B) :
+    u =ᴮ v ≤ f u =ᴮ f v := hf u v
+
 @[fun_prop] theorem IsExtentionalFun.id : IsExtentionalFun fun x : BVSet B => x :=
   fun x y => by simp
 
@@ -177,12 +187,20 @@ theorem mem_congr_right' (u v w : BVSet B) : v =ᴮ w ⊓ u ∈ᴮ w ≤ u ∈�
 @[fun_prop] def IsExtentional (f : BVSet B → B) :=
   ∀ x y, x =ᴮ y ⊓ f x ≤ f y
 
-theorem IsExtentional.eq_inf_le (f) (hf : IsExtentional f) (u v : BVSet B) : u =ᴮ v ⊓ f u ≤ f v :=
-  hf u v
+theorem IsExtentional.eq_inf_le (f) (hf : IsExtentional f) (u v : BVSet B) :
+    u =ᴮ v ⊓ f u ≤ f v := hf u v
 
-theorem IsExtentional.eq_inf_le' (f) (hf : IsExtentional f) (u v : BVSet B) : v =ᴮ u ⊓ f u ≤ f v := by
-  rw [eq_symm]
-  apply hf
+theorem IsExtentional.eq_inf_le' (f) (hf : IsExtentional f) (u v : BVSet B) :
+    v =ᴮ u ⊓ f u ≤ f v := by
+  grw [eq_symm, hf.eq_inf_le]
+
+theorem IsExtentional.inf_eq_le (f) (hf : IsExtentional f) (u v : BVSet B) :
+    f u ⊓ u =ᴮ v ≤ f v := by
+  grw [inf_comm, hf.eq_inf_le]
+
+theorem IsExtentional.inf_eq_le' (f) (hf : IsExtentional f) (u v : BVSet B) :
+    f u ⊓ v =ᴮ u ≤ f v := by
+  grw [inf_comm, hf.eq_inf_le']
 
 @[fun_prop] theorem IsExtentional.const {a : B} : IsExtentional fun _ => a :=
   fun x y => by simp
@@ -244,6 +262,18 @@ theorem IsExtentional.eq_inf_le' (f) (hf : IsExtentional f) (u v : BVSet B) : v 
   intro z
   grw [iInf_le _ z]
   apply hf
+
+theorem IsExtentional.inf_eq_le_of_le {f g} (hf : IsExtentional f) (hg : IsExtentional g)
+    (u v : BVSet B) (h : f v ≤ g v) : f u ⊓ u =ᴮ v ≤ g u := by
+  rw [← himp_eq_top_iff] at h
+  grw [← le_himp_iff', ← inf_top_eq (u =ᴮ v), ← h]
+  apply eq_inf_le'
+  fun_prop
+
+theorem IsExtentional.inf_eq_le_of_le' {f g} (hf : IsExtentional f) (hg : IsExtentional g)
+    (u v : BVSet B) (h : f u ≤ g u) : f v ⊓ u =ᴮ v ≤ g v := by
+  rw [eq_symm]
+  exact hf.inf_eq_le_of_le hg v u h
 
 @[fun_prop] protected theorem IsExtentional.iSup {α : Sort*} {f : α → BVSet B → B}
     (hf : ∀ x, IsExtentional (f x)) : IsExtentional fun x => ⨆ y, f y x := by
@@ -425,6 +455,10 @@ theorem IsExtentional.congr {f} (hf : IsExtentional f) (h : u ≈ v) : f u = f v
   · exact IsExtentional.congr (f := (· ∈ᴮ v₁)) (by fun_prop) h₁
   · exact IsExtentional.congr (by fun_prop) h₂
 
+@[gcongr] theorem mem_congr_le {u₁ u₂ v₁ v₂ : BVSet B} (h₁ : u₁ ≈ u₂) (h₂ : v₁ ≈ v₂) :
+    u₁ ∈ᴮ v₁ ≤ u₂ ∈ᴮ v₂ :=
+  (mem_congr h₁ h₂).le
+
 @[gcongr] theorem eq_congr {u₁ u₂ v₁ v₂ : BVSet B} (h₁ : u₁ ≈ u₂) (h₂ : v₁ ≈ v₂) :
     u₁ =ᴮ v₁ = u₂ =ᴮ v₂ := by
   trans u₂ =ᴮ v₁
@@ -459,6 +493,12 @@ instance : Nonempty (BVSet B) := ⟨∅⟩
 @[simp] theorem empty_subset : ∅ ⊆ᴮ u = ⊤ := by
   simp [subset_def']
 
+theorem eq_empty : u =ᴮ ∅ = ⨅ x, (x ∈ᴮ u)ᶜ := by
+  simp [eq_def, subset_def']
+
+theorem ne_empty : u ≠ᴮ ∅ = ⨆ x, x ∈ᴮ u := by
+  simp [eq_empty, compl_iInf]
+
 protected def insert (u v : BVSet.{u, v} B) : BVSet B :=
   ⟨Option v.Index, (·.elim u v.dom), (·.elim ⊤ v.val)⟩
 
@@ -490,6 +530,11 @@ theorem le_subset_insert : u ⊆ᴮ w ≤ u ⊆ᴮ insert v w := by
   · apply IsExtentionalFun.congr _ h₂
     fun_prop
 
+@[simp] theorem insert_eq_empty : insert u v =ᴮ ∅ = ⊥ := by
+  rw [eq_empty, eq_bot_iff]
+  apply iInf_le_of_le u
+  simp
+
 instance : Singleton (BVSet B) (BVSet B) := ⟨(insert · ∅)⟩
 
 @[simp] theorem mem_singleton : u ∈ᴮ {v} = u =ᴮ v := by
@@ -502,9 +547,19 @@ instance : Singleton (BVSet B) (BVSet B) := ⟨(insert · ∅)⟩
   simp only [mem_singleton]
   fun_prop
 
-@[gcongr] theorem singleton_congr {u v : BVSet B} (h : u ≈ v) : ({u} : BVSet B) ≈ {v} := by
+@[gcongr] theorem singleton_congr (h : u ≈ v) : ({u} : BVSet B) ≈ {v} := by
   apply IsExtentionalFun.congr _ h
   fun_prop
+
+@[simp] theorem singleton_eq_empty : ({u} : BVSet B) =ᴮ ∅ = ⊥ := by
+  simp [Singleton.singleton]
+
+@[simp] theorem singleton_eq_singleton : {u} =ᴮ {v} = u =ᴮ v := by
+  apply le_antisymm
+  · grw [eq_le_subset, subset_def', iInf_le _ u]
+    simp
+  · apply IsExtentionalFun.eq_le_eq
+    fun_prop
 
 def sUnion (u : BVSet.{u, v} B) : BVSet B :=
   ⟨Σ x : u, (x : BVSet B).Index, fun ⟨_, y⟩ => y, fun ⟨x, y⟩ => u x ⊓ (x : BVSet B) y⟩
@@ -526,26 +581,28 @@ theorem mem_sUnion' : u ∈ᴮ ⋃ᴮ v = ⨆ x : v, v x ⊓ u ∈ᴮ x := by
   simp only [mem_sUnion]
   fun_prop
 
-@[gcongr] theorem sUnion_congr {u v : BVSet B} (h : u ≈ v) : ⋃ᴮ u ≈ ⋃ᴮ v := by
+@[gcongr] theorem sUnion_congr (h : u ≈ v) : ⋃ᴮ u ≈ ⋃ᴮ v := by
   apply IsExtentionalFun.congr _ h
   fun_prop
 
-def powerset (u : BVSet.{u, max u v} B) : BVSet.{u, max u v} B :=
-  ⟨u.Index → B, fun f => ⟨u.Index, u.dom, f⟩, fun f => ⟨u.Index, u.dom, f⟩ ⊆ᴮ u⟩
+noncomputable def powerset [Small.{v} B] (u : BVSet.{u, v} B) : BVSet.{u, v} B :=
+  ⟨u.Index → Shrink B, fun f => ⟨u.Index, u.dom, (equivShrink B).symm ∘ f⟩,
+    fun f => ⟨u.Index, u.dom, (equivShrink B).symm ∘ f⟩ ⊆ᴮ u⟩
 
 prefix:110 "𝒫ᴮ " => powerset
 
-@[simp] theorem mem_powerset : u ∈ᴮ 𝒫ᴮ v = u ⊆ᴮ v := by
+@[simp] theorem mem_powerset [Small.{v} B] : u ∈ᴮ 𝒫ᴮ v = u ⊆ᴮ v := by
   simp only [powerset, mem_def, Index_mk, val_mk, dom_mk]
   apply le_antisymm
   · rw [iSup_le_iff]
     intro f
     rw [inf_comm, BVSet.eq_symm]
     simpa using subset_congr_left
-  · apply le_iSup_of_le fun x : v => (x : BVSet B) ∈ᴮ u
+  · apply le_iSup_of_le fun x : v => equivShrink B ((x : BVSet B) ∈ᴮ u)
     rw [le_inf_iff]
     constructor
-    · conv_rhs => simp only [subset_def, Index_mk, val_mk, dom_mk]
+    · conv_rhs =>
+        simp only [subset_def, Index_mk, val_mk, Function.comp_apply, Equiv.symm_apply_apply, dom_mk]
       rw [le_iInf_iff]
       intro x
       rw [subset_def']
@@ -556,7 +613,9 @@ prefix:110 "𝒫ᴮ " => powerset
         refine iInf_mono fun x => ?_
         simp only [le_himp_iff, himp_inf_self]
         conv_lhs => arg 1; rw [mem_def]
-        conv_rhs => rw [mem_def]; simp only [Index_mk, val_mk, dom_mk]
+        conv_rhs =>
+          rw [mem_def]
+          simp only [Index_mk, val_mk, Function.comp_apply, Equiv.symm_apply_apply, dom_mk]
         rw [iSup_inf_eq]
         refine iSup_mono fun y => ?_
         rw [inf_right_comm, le_inf_iff]
@@ -568,14 +627,14 @@ prefix:110 "𝒫ᴮ " => powerset
         · simp
       · simp [subset_def]
 
-@[fun_prop] theorem IsExtentionalFun.powerset {f : BVSet B → BVSet B}
+@[fun_prop] theorem IsExtentionalFun.powerset [Small.{v} B] {f : BVSet B → BVSet B}
     (hf : IsExtentionalFun f) : IsExtentionalFun fun x => 𝒫ᴮ (f x) := by
   apply of_isExtentional
   intro x
   simp only [mem_powerset]
   fun_prop
 
-@[gcongr] theorem powerset_congr {u v : BVSet B} (h : u ≈ v) : 𝒫ᴮ u ≈ 𝒫ᴮ v := by
+@[gcongr] theorem powerset_congr [Small.{v} B] (h : u ≈ v) : 𝒫ᴮ u ≈ 𝒫ᴮ v := by
   apply IsExtentionalFun.congr _ h
   fun_prop
 
@@ -685,42 +744,6 @@ theorem mem_replace {f} (hf : IsExtentionalFun f) :
   congr! 2 with y
   grw [h]
 
-
-
-def ne (u v : BVSet B) := (u =ᴮ v)ᶜ
-infix:70 " ≠ᴮ " => ne
-
-theorem ne_def : u ≠ᴮ v = (u =ᴮ v)ᶜ := rfl
-
-@[fun_prop] theorem IsExtentional.ne {f g : BVSet B → BVSet B}
-    (hf : IsExtentionalFun f) (hg : IsExtentionalFun g) :
-    IsExtentional fun x => f x ≠ᴮ g x := by
-  simp_rw [ne_def]
-  fun_prop
-
-@[gcongr] theorem ne_congr {u₁ u₂ v₁ v₂ : BVSet B} (h₁ : u₁ ≈ u₂) (h₂ : v₁ ≈ v₂) :
-    u₁ ≠ᴮ v₁ = u₂ ≠ᴮ v₂ := by
-  simp [ne_def, eq_congr h₁ h₂]
-
-@[gcongr] theorem ne_congr_le {u₁ u₂ v₁ v₂ : BVSet B} (h₁ : u₁ ≈ u₂) (h₂ : v₁ ≈ v₂) :
-    u₁ ≠ᴮ v₁ ≤ u₂ ≠ᴮ v₂ :=
-  (ne_congr h₁ h₂).le
-
-@[simp] theorem compl_ne : (u ≠ᴮ v)ᶜ = u =ᴮ v := by
-  simp [ne_def]
-
-@[simp] theorem eq_inf_ne (u v : BVSet B) : u =ᴮ v ⊓ u ≠ᴮ v = ⊥ := by
-  simp [ne_def]
-
-@[simp] theorem eq_sup_ne (u v : BVSet B) : u =ᴮ v ⊔ u ≠ᴮ v = ⊤ := by
-  simp [ne_def]
-
-theorem eq_empty : u =ᴮ ∅ = ⨅ x, (x ∈ᴮ u)ᶜ := by
-  simp [eq_def, subset_def']
-
-theorem ne_empty : u ≠ᴮ ∅ = ⨆ x, x ∈ᴮ u := by
-  simp [ne_def, eq_empty, compl_iInf]
-
 def union (u v : BVSet B) : BVSet B := ⋃ᴮ {u, v}
 
 instance : Union (BVSet B) := ⟨union⟩
@@ -822,7 +845,7 @@ theorem compl_subset : (u ⊆ᴮ v)ᶜ = (u \ v) ≠ᴮ ∅ := by
   simp [subset_def', ne_empty, compl_iInf, sdiff_eq]
 
 theorem subset_le : u ⊆ᴮ v ≤ u =ᴮ v ⊔ (v \ u) ≠ᴮ ∅ := by
-  rw [← compl_himp_eq', compl_ne, le_himp_iff]
+  rw [← compl_himp_eq', compl_compl, le_himp_iff]
   conv_rhs => rw [eq_def]
   apply le_inf
   · exact inf_le_left
@@ -849,8 +872,6 @@ theorem subset_inf_inter_eq_empty_le : u ⊆ᴮ v ⊓ (u ∩ (v \ w)) =ᴮ ∅ �
   · grw [inf_right_comm, himp_inf_le, inf_compl_self, bot_le]
   · grw [inf_le_left, inf_le_right]
 
-
-
 theorem IsExtentional.mem_wf {f : BVSet B → B} (hf : IsExtentional f) :
     ⨅ x, (⨅ y, y ∈ᴮ x ⇨ f y) ⇨ f x ≤ ⨅ x, f x := by
   apply le_iInf
@@ -864,15 +885,13 @@ theorem IsExtentional.mem_wf {f : BVSet B → B} (hf : IsExtentional f) :
   grw [le_himp_iff, inf_le_left, ih x]
 
 theorem regularity : u ≠ᴮ ∅ ≤ ⨆ x, x ∈ᴮ u ⊓ (x ∩ u) =ᴮ ∅ := by
-  rw [← compl_le_compl_iff_le, compl_iSup, compl_ne, eq_empty]
+  rw [← compl_le_compl_iff_le, compl_iSup, compl_compl, eq_empty]
   simp_rw [fun i => inf_comm (i ∈ᴮ u), compl_inf', eq_empty, mem_inter, compl_inf']
   apply IsExtentional.mem_wf
   fun_prop
 
 theorem mem_self : u ∈ᴮ u = ⊥ := by
-  have : ({u} : BVSet B) ≠ᴮ ∅ = ⊤ := by
-    grw [eq_top_iff, ne_empty, ← le_iSup _ u]
-    simp
+  have : ({u} : BVSet B) ≠ᴮ ∅ = ⊤ := by simp
   grw [eq_bot_iff, ← inf_top_eq (u ∈ᴮ u), ← this, regularity, inf_iSup_eq]
   apply iSup_le
   intro x
@@ -881,9 +900,7 @@ theorem mem_self : u ∈ᴮ u = ⊥ := by
   grw [inf_comm, mem_congr_right']
 
 theorem mem_cycle₂ : u ∈ᴮ v ⊓ v ∈ᴮ u = ⊥ := by
-  have : ({u, v} : BVSet B) ≠ᴮ ∅ = ⊤ := by
-    grw [eq_top_iff, ne_empty, ← le_iSup _ u]
-    simp
+  have : ({u, v} : BVSet B) ≠ᴮ ∅ = ⊤ := by simp
   grw [eq_bot_iff, ← inf_top_eq (_ ⊓ _), ← this, regularity, inf_iSup_eq]
   apply iSup_le
   intro x
@@ -899,9 +916,7 @@ theorem mem_cycle₂ : u ∈ᴮ v ⊓ v ∈ᴮ u = ⊥ := by
     grw [inf_le_left (a := u ∈ᴮ v), inf_comm, mem_congr_right']
 
 theorem mem_cycle₃ : u ∈ᴮ v ⊓ v ∈ᴮ w ⊓ w ∈ᴮ u = ⊥ := by
-  have : ({u, v, w} : BVSet B) ≠ᴮ ∅ = ⊤ := by
-    grw [eq_top_iff, ne_empty, ← le_iSup _ u]
-    simp
+  have : ({u, v, w} : BVSet B) ≠ᴮ ∅ = ⊤ := by simp
   grw [eq_bot_iff, ← inf_top_eq (_ ⊓ _), ← this, regularity, inf_iSup_eq]
   apply iSup_le
   intro x
