@@ -1,6 +1,5 @@
 import BooleanValuedModels.BooleanAlgebra.Lemmas
 import Mathlib.Logic.Small.Defs
-import Mathlib.Tactic.FunProp
 
 universe u v
 
@@ -535,6 +534,12 @@ theorem le_subset_insert : u ⊆ᴮ w ≤ u ⊆ᴮ insert v w := by
   apply iInf_le_of_le u
   simp
 
+theorem insert_idem : insert u (insert u v) ≈ insert u v :=
+  ext fun x => by simp
+
+theorem insert_comm : insert u (insert v w) ≈ insert v (insert u w) :=
+  ext fun x => by simpa using sup_left_comm _ _ _
+
 instance : Singleton (BVSet B) (BVSet B) := ⟨(insert · ∅)⟩
 
 @[simp] theorem mem_singleton : u ∈ᴮ {v} = u =ᴮ v := by
@@ -554,12 +559,77 @@ instance : Singleton (BVSet B) (BVSet B) := ⟨(insert · ∅)⟩
 @[simp] theorem singleton_eq_empty : ({u} : BVSet B) =ᴮ ∅ = ⊥ := by
   simp [Singleton.singleton]
 
+theorem pair_self : {u, u} ≈ ({u} : BVSet B) :=
+  ext fun x => by simp
+
+theorem pair_comm (u v) : {u, v} ≈ ({v, u} : BVSet B) :=
+  ext fun x => by simpa using sup_comm _ _
+
 @[simp] theorem singleton_eq_singleton : {u} =ᴮ {v} = u =ᴮ v := by
   apply le_antisymm
   · grw [eq_le_subset, subset_def', iInf_le _ u]
     simp
   · apply IsExtentionalFun.eq_le_eq
     fun_prop
+
+@[simp] theorem singleton_eq_pair : {u} =ᴮ {v, w} = u =ᴮ v ⊓ u =ᴮ w := by
+  apply le_antisymm
+  · apply le_inf
+    · grw [eq_le_subset', subset_def', iInf_le _ v, eq_symm]
+      simp
+    · grw [eq_le_subset', subset_def', iInf_le _ w, eq_symm]
+      simp
+  · grw [← pair_self, ← eq_trans {u, u} {v, u}]
+    apply inf_le_inf
+    · apply IsExtentionalFun.eq_le_eq ({·, u})
+      fun_prop
+    · apply IsExtentionalFun.eq_le_eq
+      fun_prop
+
+@[simp] theorem pair_eq_singleton : {u, v} =ᴮ {w} = u =ᴮ w ⊓ v =ᴮ w := by
+  rw [eq_symm, singleton_eq_pair, eq_symm w u, eq_symm w v]
+
+@[simp] theorem pair_eq_pair {u₁ u₂ v₁ v₂ : BVSet B} :
+    {u₁, v₁} =ᴮ {u₂, v₂} = u₁ =ᴮ u₂ ⊓ v₁ =ᴮ v₂ ⊔ u₁ =ᴮ v₂ ⊓ u₂ =ᴮ v₁ := by
+  apply le_antisymm
+  · suffices ∀ u₁ u₂ v₁ v₂, {u₁, v₁} =ᴮ {u₂, v₂} ⊓ u₁ =ᴮ u₂ ≤ v₁ =ᴮ v₂ by
+      rw [← inf_idem ({_, _} =ᴮ _)]
+      nth_grw 2 [eq_le_subset]
+      grw [subset_def', iInf_le _ u₁]
+      simp only [mem_insert, eq_refl, mem_singleton, le_top, sup_of_le_left, top_himp, inf_sup_left]
+      apply sup_le
+      · grw [← le_sup_left]
+        apply le_inf
+        · grw [inf_le_right]
+        · apply this
+      · grw [← le_sup_right]
+        apply le_inf
+        · grw [inf_le_right]
+        · grw [pair_comm u₂ v₂, eq_symm u₂ v₁]
+          apply this
+    intro u₁ u₂ v₁ v₂
+    apply IsExtentional.inf_eq_le_of_le' (by fun_prop) (by fun_prop) u₁ u₂
+    rw [← inf_idem ({_, _} =ᴮ _)]
+    nth_grw 2 [eq_le_subset]
+    grw [subset_def', iInf_le _ v₁]
+    simp only [mem_insert, mem_singleton, eq_refl, le_top, sup_of_le_right, top_himp,
+      inf_sup_left, sup_le_iff, inf_le_right, and_true]
+    apply IsExtentional.inf_eq_le_of_le (by fun_prop) (by fun_prop) v₁ u₁
+    grw [pair_self]
+    simp
+  · have : IsExtentionalFun₂ (B := B) ({·, ·}) := by fun_prop
+    apply sup_le
+    · apply this
+    · grw [pair_comm u₂ v₂, eq_symm u₂ v₁]
+      apply this
+
+@[simp] theorem singleton_subset : {u} ⊆ᴮ v = u ∈ᴮ v := by
+  simp only [subset_def', mem_singleton]
+  rw [IsExtentional.iInf_eq_himp (by fun_prop)]
+
+@[simp] theorem pair_subset : {u, v} ⊆ᴮ w = u ∈ᴮ w ⊓ v ∈ᴮ w := by
+  simp only [subset_def', mem_insert, mem_singleton, sup_himp_distrib, iInf_inf_eq]
+  rw [IsExtentional.iInf_eq_himp (by fun_prop), IsExtentional.iInf_eq_himp (by fun_prop)]
 
 def sUnion (u : BVSet.{u, v} B) : BVSet B :=
   ⟨Σ x : u, (x : BVSet B).Index, fun ⟨_, y⟩ => y, fun ⟨x, y⟩ => u x ⊓ (x : BVSet B) y⟩
@@ -584,6 +654,14 @@ theorem mem_sUnion' : u ∈ᴮ ⋃ᴮ v = ⨆ x : v, v x ⊓ u ∈ᴮ x := by
 @[gcongr] theorem sUnion_congr (h : u ≈ v) : ⋃ᴮ u ≈ ⋃ᴮ v := by
   apply IsExtentionalFun.congr _ h
   fun_prop
+
+theorem sUnion_empty : ⋃ᴮ (∅ : BVSet B) ≈ ∅ :=
+  ext fun x => by simp
+
+theorem sUnion_singleton : ⋃ᴮ {u} ≈ u :=
+  ext fun x => by
+    simp only [mem_sUnion, mem_singleton]
+    rw [IsExtentional.iSup_eq_inf (by fun_prop)]
 
 noncomputable def powerset [Small.{v} B] (u : BVSet.{u, v} B) : BVSet.{u, v} B :=
   ⟨u.Index → Shrink B, fun f => ⟨u.Index, u.dom, (equivShrink B).symm ∘ f⟩,
@@ -689,6 +767,9 @@ theorem mem_sep {f} (hf : IsExtentional f) : u ∈ᴮ sep v f = u ∈ᴮ v ⊓ f
   intro x
   grw [mem_sep hf, mem_sep hf, h]
 
+theorem sep_subset {f} (hf : IsExtentional f) : sep u f ⊆ᴮ u = ⊤ := by
+  simp [subset_def', mem_sep hf]
+
 def replace (u : BVSet B) (f : BVSet B → BVSet B) : BVSet B :=
   ⟨u.Index, fun i => f i, fun i => u i⟩
 
@@ -744,9 +825,25 @@ theorem mem_replace {f} (hf : IsExtentionalFun f) :
   congr! 2 with y
   grw [h]
 
+theorem replace_empty {f} (hf : IsExtentionalFun f) : replace (∅ : BVSet B) f ≈ ∅ :=
+  ext fun x => by simp [mem_replace hf]
+
+theorem replace_singleton {f} (hf : IsExtentionalFun f) : replace {u} f ≈ {f u} :=
+  ext fun x => by
+    simp only [mem_replace hf, mem_singleton]
+    rw [IsExtentional.iSup_eq_inf (by fun_prop)]
+
+theorem replace_insert {f} (hf : IsExtentionalFun f) :
+    replace (insert u v) f ≈ insert (f u) (replace v f) :=
+  ext fun x => by
+    simp only [mem_replace hf, mem_insert, inf_sup_right, iSup_sup_eq]
+    rw [IsExtentional.iSup_eq_inf (by fun_prop)]
+
 def union (u v : BVSet B) : BVSet B := ⋃ᴮ {u, v}
 
 instance : Union (BVSet B) := ⟨union⟩
+
+theorem sUnion_pair : ⋃ᴮ {u, v} = u ∪ v := rfl
 
 @[simp] theorem mem_union : u ∈ᴮ (v ∪ w) = u ∈ᴮ v ⊔ u ∈ᴮ w := by
   simp only [Union.union, union, mem_sUnion, mem_insert, mem_singleton]
@@ -775,6 +872,27 @@ instance : Union (BVSet B) := ⟨union⟩
   · apply IsExtentionalFun.congr _ h₂
     fun_prop
 
+@[simp] theorem subset_union_left : u ⊆ᴮ (u ∪ v) = ⊤ := by
+  simp [subset_def']
+
+@[simp] theorem subset_union_right : v ⊆ᴮ (u ∪ v) = ⊤ := by
+  simp [subset_def']
+
+theorem empty_union : ∅ ∪ u ≈ u :=
+  ext fun x => by simp
+
+theorem union_empty : u ∪ ∅ ≈ u :=
+  ext fun x => by simp
+
+theorem union_comm : u ∪ v ≈ v ∪ u :=
+  ext fun x => by simpa using sup_comm _ _
+
+theorem union_singleton : u ∪ {v} ≈ insert v u :=
+  ext fun x => by simpa using sup_comm _ _
+
+theorem union_insert : u ∪ insert v w ≈ insert v (u ∪ w) :=
+  ext fun x => by simpa using sup_left_comm _ _ _
+
 def inter (u v : BVSet B) : BVSet B := sep u (· ∈ᴮ v)
 
 instance : Inter (BVSet B) := ⟨inter⟩
@@ -797,11 +915,11 @@ instance : Inter (BVSet B) := ⟨inter⟩
   · apply IsExtentionalFun.congr _ h₂
     fun_prop
 
-theorem empty_inter : ∅ ∩ u ≈ ∅ := by
-  simp [equiv_def, eq_def, subset_def']
+theorem empty_inter : ∅ ∩ u ≈ ∅ :=
+  ext fun x => by simp
 
-theorem inter_empty : u ∩ ∅ ≈ ∅ := by
-  simp [equiv_def, eq_def, subset_def']
+theorem inter_empty : u ∩ ∅ ≈ ∅ :=
+  ext fun x => by simp
 
 theorem inter_subset_left : (u ∩ v) ⊆ᴮ u = ⊤ := by
   simp [subset_def']
@@ -815,9 +933,8 @@ theorem le_subset_inter : u ⊆ᴮ v ⊓ u ⊆ᴮ w ≤ u ⊆ᴮ (v ∩ w) := by
   intro x
   rw [mem_inter, himp_inf_distrib]
 
-theorem inter_comm : u ∩ v ≈ v ∩ u := by
-  rw [equiv_def, eq_def, eq_top_iff]
-  apply le_inf <;> grw [← le_subset_inter] <;> simp [inter_subset_left, inter_subset_right]
+theorem inter_comm : u ∩ v ≈ v ∩ u :=
+  ext fun x => by simpa using inf_comm _ _
 
 def sdiff (u v : BVSet B) : BVSet B := sep u fun x => (x ∈ᴮ v)ᶜ
 

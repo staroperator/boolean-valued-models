@@ -129,6 +129,38 @@ theorem toBVSet_singleton : (({x} : ZFSet).toBVSet : BVSet B) ≈ {(x.toBVSet : 
   change toBVSet (insert x ∅) ≈ insert (toBVSet x) ∅
   grw [toBVSet_insert, toBVSet_empty]
 
+theorem toBVSet_sUnion : (⋃₀ x).toBVSet ≈ ⋃ᴮ (x.toBVSet : BVSet B) := by
+  apply BVSet.ext
+  intro u
+  rw [mem_toBVSet]
+  simp only [BVSet.mem_sUnion]
+  apply le_antisymm
+  · apply iSup_le
+    intro ⟨z, hz⟩
+    simp only [mem_sUnion] at hz
+    rcases hz with ⟨y, hy, hz⟩
+    apply le_iSup_of_le (toBVSet y)
+    simp only [toBVSet_mem_toBVSet_of_mem hy, top_inf_eq]
+    grw [← BVSet.mem_congr_left z.toBVSet, BVSet.eq_symm]
+    simp [toBVSet_mem_toBVSet_of_mem hz]
+  · simp only [iSup_le_iff]
+    intro v
+    rw [mem_toBVSet, iSup_inf_eq]
+    apply iSup_le
+    intro ⟨y, hy⟩
+    simp only
+    rw [inf_comm]
+    apply BVSet.IsExtentional.inf_eq_le_of_le (by fun_prop) (by fun_prop) v y.toBVSet
+    rw [mem_toBVSet]
+    apply iSup_le
+    intro ⟨z, hz⟩
+    apply le_iSup_of_le ⟨z, mem_sUnion_of_mem hz hy⟩
+    simp
+
+theorem toBVSet_union : (x ∪ y).toBVSet ≈ (x.toBVSet : BVSet B) ∪ y.toBVSet := by
+  change (⋃₀ {x, y}).toBVSet ≈ ⋃ᴮ {x.toBVSet, y.toBVSet}
+  grw [toBVSet_sUnion, toBVSet_insert, toBVSet_singleton]
+
 end ZFSet
 
 namespace BVSet

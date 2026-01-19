@@ -1,6 +1,5 @@
-import Mathlib.SetTheory.ZFC.Ordinal
-import Mathlib.Tactic.DepRewrite
 import BooleanValuedModels.BVSet.ZFSet
+import Mathlib.SetTheory.ZFC.Ordinal
 
 universe u v
 
@@ -13,6 +12,11 @@ def isTransitive (u : BVSet B) : B :=
 
 @[fun_prop] protected theorem IsExtentional.isTransitive : IsExtentional (B := B) isTransitive := by
   unfold isTransitive
+  fun_prop
+
+@[gcongr] theorem isTransitive_congr {u v : BVSet B} (h : u ≈ v) :
+    isTransitive u = isTransitive v := by
+  apply IsExtentional.congr _ h
   fun_prop
 
 theorem isTransitive_inf_mem_le (u v : BVSet B) : isTransitive u ⊓ v ∈ᴮ u ≤ v ⊆ᴮ u := by
@@ -36,6 +40,11 @@ def isOrdinal (u : BVSet B) : B :=
   unfold isOrdinal
   fun_prop
 
+@[gcongr] theorem isOrdinal_congr {u v : BVSet B} (h : u ≈ v) :
+    isOrdinal u = isOrdinal v := by
+  apply IsExtentional.congr _ h
+  fun_prop
+
 @[simp] theorem isOrdinal_empty : isOrdinal ∅ = (⊤ : B) := by
   simp [isOrdinal]
 
@@ -49,7 +58,7 @@ theorem isOrdinal_mem_trichotomous :
 
 theorem isOrdinal_inf_mem_inf_mem_inf_mem_le {x y z} :
     isOrdinal u ⊓ x ∈ᴮ u ⊓ y ∈ᴮ x ⊓ z ∈ᴮ y ≤ z ∈ᴮ x := by
-  apply le_of_inf_le (b := x ∈ᴮ z ⊔ x =ᴮ z ⊔ z ∈ᴮ x)
+  apply le_of_inf_le (x ∈ᴮ z ⊔ x =ᴮ z ⊔ z ∈ᴮ x)
   · grw [← isOrdinal_mem_trichotomous (u := u)]
     refine le_inf ?_ ?_
     · grw [inf_le_left, inf_le_left]
@@ -99,14 +108,14 @@ theorem isOrdinal_inf_mem_le_isOrdinal :
 theorem isOrdinal_inf_subset_le_mem_sup_eq :
     isOrdinal u ⊓ isOrdinal v ⊓ v ⊆ᴮ u ≤ v ∈ᴮ u ⊔ v =ᴮ u := by
   rw [← compl_himp_eq', le_himp_iff]
-  apply le_of_inf_le (b := (u \ v) ≠ᴮ ∅)
+  apply le_of_inf_le ((u \ v) ≠ᴮ ∅)
   · grw [inf_assoc, inf_le_right, subset_inf_ne_le]
   · grw [regularity, inf_iSup_eq]
     apply iSup_le
     intro x
     simp only [mem_sdiff, ← inf_assoc]
-    apply le_of_inf_le (b := x =ᴮ v)
-    · apply le_of_inf_le (b := x ⊆ᴮ v)
+    apply le_of_inf_le (x =ᴮ v)
+    · apply le_of_inf_le (x ⊆ᴮ v)
       · grw [← subset_inf_inter_eq_empty_le (u := x) (v := u)]
         apply le_inf
         · grw [← isTransitive_inf_mem_le (u := u) (v := x)]
@@ -120,7 +129,7 @@ theorem isOrdinal_inf_subset_le_mem_sup_eq :
         apply iSup_le
         intro y
         simp only [mem_sdiff, ← inf_assoc]
-        apply le_of_inf_le (b := x ∈ᴮ y ⊔ x =ᴮ y ⊔ y ∈ᴮ x)
+        apply le_of_inf_le (x ∈ᴮ y ⊔ x =ᴮ y ⊔ y ∈ᴮ x)
         · grw [← isOrdinal_mem_trichotomous (u := u)]
           refine le_inf (le_inf ?_ ?_) ?_
           · repeat grw [inf_le_left]
@@ -133,7 +142,7 @@ theorem isOrdinal_inf_subset_le_mem_sup_eq :
             · grw [inf_le_left, inf_le_left, inf_le_right]
         · rw [inf_sup_left, inf_sup_left]
           refine sup_le (sup_le ?_ ?_) ?_
-          · apply le_of_inf_le (b := y ⊆ᴮ x)
+          · apply le_of_inf_le (y ⊆ᴮ x)
             · grw [← subset_inf_inter_eq_empty_le (u := y) (v := v)]
               apply le_inf
               · grw [← isTransitive_inf_mem_le (u := v)]
@@ -162,7 +171,7 @@ theorem isOrdinal_le_subset_sup_mem :
   apply iSup_le
   intro x
   simp only [mem_sdiff, ← inf_assoc]
-  apply le_of_inf_le (b := x ∈ᴮ v ⊔ x =ᴮ v)
+  apply le_of_inf_le (x ∈ᴮ v ⊔ x =ᴮ v)
   · grw [← isOrdinal_inf_subset_le_mem_sup_eq]
     refine le_inf (le_inf ?_ ?_) ?_
     · grw [inf_le_left, inf_le_left, inf_le_left, inf_le_right]
@@ -187,7 +196,7 @@ theorem isOrdinal_le_subset_sup_mem :
 
 theorem isOrdinal_trichotomous :
     isOrdinal u ⊓ isOrdinal v ≤ u ∈ᴮ v ⊔ u =ᴮ v ⊔ v ∈ᴮ u := by
-  apply le_of_inf_le isOrdinal_le_subset_sup_mem
+  apply le_of_inf_le _ isOrdinal_le_subset_sup_mem
   rw [inf_sup_left]
   apply sup_le
   · grw [inf_comm (isOrdinal u), isOrdinal_inf_subset_le_mem_sup_eq]
@@ -209,6 +218,10 @@ theorem _root_.ZFSet.isOrdinal_toBVSet_of_isOrdinal {x : ZFSet.{v}} (hx : x.IsOr
   · simp [h, eq_refl]
   · simp [ZFSet.toBVSet_mem_toBVSet_of_mem h]
 
+theorem _root_.ZFSet.isOrdinal_toBVSet {o : Ordinal} :
+    isOrdinal o.toZFSet.toBVSet = (⊤ : B) :=
+  ZFSet.isOrdinal_toBVSet_of_isOrdinal (ZFSet.isOrdinal_toZFSet o)
+
 theorem isOrdinal_eq_iSup_eq {u : BVSet.{u, max u v} B} :
     isOrdinal u = ⨆ o : Ordinal.{max u v}, u =ᴮ o.toZFSet.toBVSet := by
   apply le_antisymm
@@ -224,7 +237,7 @@ theorem isOrdinal_eq_iSup_eq {u : BVSet.{u, max u v} B} :
         conv_lhs => arg 2; rw [h, eq_symm]
         grw [eq_trans, ZFSet.toBVSet_eq_toBVSet_of_ne (B := B) (Ordinal.toZFSet_injective.ne h')]
     let o := Order.succ (⨆ i, sSup (f i))
-    rw [← inf_top_eq (isOrdinal u), ← ZFSet.isOrdinal_toBVSet_of_isOrdinal (ZFSet.isOrdinal_toZFSet o)]
+    rw [← inf_top_eq (isOrdinal u), ← ZFSet.isOrdinal_toBVSet]
     refine isOrdinal_trichotomous.trans (sup_le (sup_le ?_ ?_) ?_)
     · rw [ZFSet.mem_toBVSet,
         ← (Equiv.subtypeEquivRight (p := (· ∈ o.toZFSet)) (Set.ext_iff.1 Ordinal.coe_toZFSet)).symm.iSup_comp]
@@ -246,7 +259,7 @@ theorem isOrdinal_eq_iSup_eq {u : BVSet.{u, max u v} B} :
   · apply iSup_le
     intro o
     grw [← IsExtentional.eq_inf_le' isOrdinal (by fun_prop) o.toZFSet.toBVSet]
-    simp [ZFSet.isOrdinal_toBVSet_of_isOrdinal (ZFSet.isOrdinal_toZFSet o)]
+    simp [ZFSet.isOrdinal_toBVSet]
 
 theorem IsExtentional.iInf_isOrdinal_himp {f} (hf : IsExtentional f) :
     ⨅ x : BVSet.{u, max u v} B, isOrdinal x ⇨ f x = ⨅ o : Ordinal.{max u v}, f o.toZFSet.toBVSet := by

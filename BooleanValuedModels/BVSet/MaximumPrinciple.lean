@@ -35,12 +35,8 @@ theorem le_mix_eq_of_pairwise_disjoint (ha : ∀ i j, i ≠ j → Disjoint (a i)
     a i ≤ mix ι a u =ᴮ u i :=
   le_mix_eq fun i j hij => le_of_eq_of_le (ha i j hij).eq_bot bot_le
 
-end BVSet
-
-open BVSet
-
 /-- Maximum principle. -/
-theorem SetTheory.Formula.exists_eq_iSup [Small.{v} B] {f : BVSet.{u, v} B → B}
+theorem exists_eq_iSup [Small.{v} B] {f : BVSet.{u, v} B → B}
     (hf : IsExtentional f) : ∃ u, f u = ⨆ x, f x := by
   let ι : Type v := Shrink { a // ∃ u, f u = a }
   rcases exists_wellOrder ι with ⟨hlo, hwo⟩
@@ -90,3 +86,5 @@ theorem SetTheory.Formula.exists_eq_iSup [Small.{v} B] {f : BVSet.{u, v} B → B
           exact ha₃ j i hij
         · exact ha₃ i j hij
       · grw [ha₁ i, BVSet.eq_symm, hf (u i) (mix ι a u)]
+
+end BVSet
