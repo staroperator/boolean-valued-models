@@ -1,18 +1,7 @@
 import BooleanValuedModels.BVSet.Ordinal
 import BooleanValuedModels.BooleanAlgebra.CountableChainCondition
-import Mathlib.SetTheory.Cardinal.Pigeonhole
+import BooleanValuedModels.DeltaSystemLemma
 import Mathlib.SetTheory.ZFC.Cardinal
-
-open Order Cardinal in
-theorem Cardinal.exists_uncountable_fiber {β α : Type u} (f : β → α) (h : #α < #β) (hβ : Uncountable β) :
-    ∃ a : α, Uncountable (f ⁻¹' {a}) := by
-  simp_rw [← Cardinal.aleph0_lt_mk_iff, ← Order.succ_le_iff, succ_aleph0] at hβ ⊢
-  rcases lt_or_ge #α ℵ₀ with hα | hα
-  · exact infinite_pigeonhole_card f ℵ₁ hβ aleph0_lt_aleph_one.le
-      (by rw [isRegular_aleph_one.cof_eq]; exact hα.trans aleph0_lt_aleph_one)
-  · obtain ⟨a, ha⟩ := infinite_pigeonhole_card_lt f h hα
-    rw [← Order.succ_le_succ_iff, succ_aleph0] at hα
-    exact ⟨a, hα.trans (succ_le_of_lt ha)⟩
 
 @[simp]
 theorem Ordinal.card_toZFSet (o : Ordinal) : o.toZFSet.card = o.card := by
