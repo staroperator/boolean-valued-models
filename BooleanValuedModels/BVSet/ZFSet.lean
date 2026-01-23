@@ -162,25 +162,3 @@ theorem toBVSet_union : (x ∪ y).toBVSet ≈ (x.toBVSet : BVSet B) ∪ y.toBVSe
   grw [toBVSet_sUnion, toBVSet_insert, toBVSet_singleton]
 
 end ZFSet
-
-namespace BVSet
-
-def omega : BVSet B := ZFSet.omega.toBVSet
-
-notation "ωᴮ" => omega
-
-theorem empty_mem_omega : ∅ ∈ᴮ ωᴮ = (⊤ : B) := by
-  grw [← ZFSet.toBVSet_empty]
-  exact ZFSet.toBVSet_mem_toBVSet_of_mem (ZFSet.omega_zero)
-
-theorem le_succ_mem_omega {u : BVSet B} : u ∈ᴮ ωᴮ ≤ insert u u ∈ᴮ ωᴮ := by
-  unfold omega
-  rw [ZFSet.mem_toBVSet, ZFSet.mem_toBVSet]
-  apply iSup_le
-  intro ⟨x, hx⟩
-  apply le_iSup_of_le ⟨insert x x, ZFSet.omega_succ hx⟩
-  grw [← IsExtentional.eq_inf_le' (fun y => insert y y =ᴮ ZFSet.toBVSet _) (by fun_prop) x.toBVSet,
-    ← ZFSet.toBVSet_insert]
-  simp
-
-end BVSet

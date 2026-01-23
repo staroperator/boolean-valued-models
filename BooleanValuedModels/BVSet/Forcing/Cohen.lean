@@ -1,0 +1,193 @@
+import BooleanValuedModels.BooleanAlgebra.FinMap
+import BooleanValuedModels.BVSet.Cardinal
+
+namespace Cohen
+
+open Ordinal
+
+variable {α : Ordinal.{u}} {n : ℕ} {o : (ω_ α).ToType}
+
+local notation "ℙ" => Finmap' (ℕ × Ordinal.ToType (ω_ α)) Bool
+local notation "𝔹" => RegularOpenSet (ℕ × Ordinal.ToType (ω_ α) → Bool)
+
+def cylinder (o : (ω_ α).ToType) (n : ℕ) : Set (ℕ × Ordinal.ToType (ω_ α) → Bool) :=
+  {f | f (n, o) = true}
+
+theorem isClopen_cyliner : IsClopen (cylinder o n) := by
+  constructor
+  · simp only [← isOpen_compl_iff, isOpen_pi_iff, Set.mem_compl_iff, cylinder, Set.mem_setOf_eq,
+      Bool.not_eq_true, isOpen_discrete, true_and]
+    intro f hf
+    exact ⟨{(n, o)}, fun _ => {false}, by grind⟩
+  · simp only [isOpen_pi_iff, cylinder, Set.mem_setOf_eq, isOpen_discrete, true_and]
+    intro f hf
+    exact ⟨{(n, o)}, fun _ => {true}, by grind⟩
+
+def cohenRealVal (o : (ω_ α).ToType) (n : ℕ) : 𝔹 :=
+  ⟨cylinder o n, isRegularOpen_of_isClopen isClopen_cyliner⟩
+
+@[simp]
+theorem coe_cohenRealVal : (cohenRealVal o n : Set _) = cylinder o n := rfl
+
+@[simp]
+theorem mem_cohenRealVal {f} : f ∈ cohenRealVal o n ↔ f (n, o) = true := Iff.rfl
+
+@[simp]
+theorem mem_compl_cohenRealVal {f} : f ∈ (cohenRealVal o n)ᶜ ↔ f (n, o) = false := by
+  rw [← SetLike.mem_coe, RegularOpenSet.coe_compl, coe_cohenRealVal,
+    isClopen_cyliner.compl.isOpen.interior_eq]
+  simp [cylinder]
+
+noncomputable def cohenReal (o : Ordinal.ToType (ω_ α)) : BVSet.{u, u} 𝔹 :=
+  ⟨ULift ℕ, fun ⟨n⟩ => n, fun ⟨n⟩ => cohenRealVal o n⟩
+
+theorem forces_mem_cohenReal {p : ℙ} :
+    p ⊩ n ∈ᴮ cohenReal o ↔ p.lookup (n, o) = true := by
+  simp only [cohenReal, BVSet.mem_def, BVSet.Index_mk, BVSet.val_mk, BVSet.dom_mk,
+    BVSet.natCast_eq_natCast, apply_ite, le_top, inf_of_le_left, bot_le, inf_of_le_right, iSup_ite,
+    iSup_ulift, iSup_iSup_eq_right, iSup_bot, sup_of_le_left, Finmap.forces_iff, mem_cohenRealVal]
+  constructor
+  · intro h
+    specialize h (p.extend fun _ => false) fun a ha => by rw [Finmap.extend_apply_of_mem_entries ha]
+    match h' : p.lookup (n, o) with
+    | some true => rfl
+    | some false =>
+      rw [Finmap.lookup_eq_some_iff] at h'
+      simp [Finmap.extend_apply_of_mem_entries h'] at h
+    | none =>
+      rw [Finmap.lookup_eq_none] at h'
+      simp [Finmap.extend_apply_of_notMem h'] at h
+  · intro h f hf
+    rw [Finmap.lookup_eq_some_iff] at h
+    exact hf _ h
+
+theorem forces_notMem_cohenReal {p : ℙ} :
+    p ⊩ n ∉ᴮ cohenReal o ↔ p.lookup (n, o) = false := by
+  simp only [cohenReal, BVSet.mem_def, BVSet.Index_mk, BVSet.val_mk, BVSet.dom_mk,
+    BVSet.natCast_eq_natCast, apply_ite, le_top, inf_of_le_left, bot_le, inf_of_le_right, iSup_ite,
+    iSup_ulift, iSup_iSup_eq_right, iSup_bot, sup_of_le_left, Finmap.forces_iff, mem_compl_cohenRealVal]
+  constructor
+  · intro h
+    specialize h (p.extend fun _ => true) fun a ha => by rw [Finmap.extend_apply_of_mem_entries ha]
+    match h' : p.lookup (n, o) with
+    | some true =>
+      rw [Finmap.lookup_eq_some_iff] at h'
+      simp [Finmap.extend_apply_of_mem_entries h'] at h
+    | some false => rfl
+    | none =>
+      rw [Finmap.lookup_eq_none] at h'
+      simp [Finmap.extend_apply_of_notMem h'] at h
+  · intro h f hf
+    rw [Finmap.lookup_eq_some_iff] at h
+    exact hf _ h
+
+theorem cohenReal_ne_cohenReal {o₁ o₂ : Ordinal.ToType (ω_ α)} (h : o₁ ≠ o₂) :
+    cohenReal o₁ =ᴮ cohenReal o₂ = ⊥ := by
+  rw [eq_bot_iff_forall_not_forces (α := ℙ)]
+  intro p hp
+  rcases Infinite.exists_notMem_finset (p.keys.image Prod.fst) with ⟨n, hn⟩
+  simp only [Finset.mem_image, Finmap.mem_keys, Prod.exists, exists_and_right, exists_eq_right,
+    not_exists] at hn
+  let q : ℙ := (p.insert (n, o₁) true).insert (n, o₂) false
+  apply forces_bot (p := q) (β := 𝔹)
+  rw [← inf_compl_self (cohenReal o₁ =ᴮ cohenReal o₂), forces_inf]
+  refine ⟨hp.weaken ?_, ?_⟩
+  · apply (Finmap.insert_le_of_notMem (by simp [ne_comm.1 h, hn o₂])).trans
+    exact Finmap.insert_le_of_notMem (by simp [hn o₁])
+  · grw [BVSet.eq_def, compl_inf, ← le_sup_left, BVSet.subset_def', compl_iInf,
+      ← le_iSup _ (n : BVSet 𝔹), compl_himp, sdiff_eq, forces_inf]
+    constructor
+    · rw [forces_mem_cohenReal, Finmap.lookup_insert_of_ne _ (by simpa), Finmap.lookup_insert]
+    · rw [forces_notMem_cohenReal, Finmap.lookup_insert]
+
+theorem cohenReal_mem_powerset_omega :
+    cohenReal o ∈ᴮ 𝒫ᴮ ωᴮ = (⊤ : 𝔹) := by
+  rw [eq_top_iff, BVSet.mem_powerset, BVSet.subset_def]
+  refine le_iInf fun ⟨n⟩ => ?_
+  simp [cohenReal, BVSet.natCast_mem_omega]
+
+theorem cardLE_powerset_omega :
+    (ω_ α).toZFSet.toBVSet ≲ᴮ 𝒫ᴮ ωᴮ = (⊤ : 𝔹) := by
+  classical
+  haveI := @Classical.allZFSetDefinable
+  rw [eq_top_iff]
+  let f : BVSet 𝔹 :=
+    (BVSet.prod (ω_ α).toZFSet.toBVSet (𝒫ᴮ ωᴮ)).sep fun x =>
+      ⨆ (o : (ω_ α).ToType), x =ᴮ BVSet.kpair o.toOrd.1.toZFSet.toBVSet (cohenReal o)
+  refine le_iSup_of_le f (le_inf (le_inf (le_inf ?_ ?_) ?_) ?_)
+  · rw [BVSet.sep_subset (by fun_prop)]
+  · rw [BVSet.IsExtentional.iInf_mem_toBVSet_himp (by fun_prop)]
+    refine le_iInf fun ⟨x, hx⟩ => ?_
+    simp only [mem_toZFSet_iff] at hx
+    rcases hx with ⟨o, ho, rfl⟩
+    refine le_iSup_of_le (cohenReal (Ordinal.ToType.mk ⟨o, ho⟩)) (le_inf ?_ ?_)
+    · rw [cohenReal_mem_powerset_omega]
+    · rw [BVSet.mem_sep (by fun_prop)]
+      refine le_inf ?_ (le_iSup_of_le (Ordinal.ToType.mk ⟨o, ho⟩) ?_)
+      · grw [← BVSet.le_kpair_mem_prod,
+          ZFSet.toBVSet_mem_toBVSet_of_mem (by simpa),
+          cohenReal_mem_powerset_omega, top_inf_eq]
+      · simp
+  · rw [BVSet.IsExtentional.iInf_mem_toBVSet_himp (by fun_prop)]
+    refine le_iInf fun ⟨x, hx⟩ => ?_
+    simp only [mem_toZFSet_iff] at hx
+    rcases hx with ⟨o, ho, rfl⟩
+    refine le_iInf fun y₁ => ?_
+    grw [← le_himp]
+    refine le_iInf fun y₂ => ?_
+    grw [← le_himp, le_himp_iff, top_inf_eq, BVSet.mem_sep (by fun_prop), inf_le_right (a := _ ∈ᴮ BVSet.prod _ _)]
+    refine iSup_le fun o₁ => ?_
+    rw [BVSet.kpair_eq_kpair]
+    by_cases ho₁ : o₁ = Ordinal.ToType.mk ⟨o, ho⟩
+    · subst ho₁
+      simp only [OrderIso.symm_apply_apply, BVSet.eq_refl, le_top, inf_of_le_right, le_himp_iff]
+      grw [BVSet.mem_sep (by fun_prop), inf_le_right (a := _ ∈ᴮ BVSet.prod _ _), inf_iSup_eq]
+      refine iSup_le fun o₂ => ?_
+      rw [BVSet.kpair_eq_kpair]
+      by_cases ho₂ : o₂ = Ordinal.ToType.mk ⟨o, ho⟩
+      · subst ho₂
+        simp only [OrderIso.symm_apply_apply, BVSet.eq_refl, le_top, inf_of_le_right]
+        grw [BVSet.eq_symm y₂, BVSet.eq_trans]
+      · rw [ZFSet.toBVSet_eq_toBVSet_of_ne fun ne => by rw [toZFSet_injective.eq_iff] at ne; simp [ne] at ho₂]
+        simp
+    · rw [ZFSet.toBVSet_eq_toBVSet_of_ne fun ne => by rw [toZFSet_injective.eq_iff] at ne; simp [ne] at ho₁]
+      simp
+  · rw [BVSet.isInjective, BVSet.IsExtentional.iInf_mem_toBVSet_himp (by fun_prop)]
+    refine le_iInf fun ⟨x₁, hx₁⟩ => ?_
+    simp only [mem_toZFSet_iff] at hx₁
+    rcases hx₁ with ⟨o₁, ho₁, rfl⟩
+    rw [BVSet.IsExtentional.iInf_mem_toBVSet_himp (by fun_prop)]
+    refine le_iInf fun ⟨x₂, hx₂⟩ => ?_
+    simp only [mem_toZFSet_iff] at hx₂
+    rcases hx₂ with ⟨o₂, ho₂, rfl⟩
+    refine le_iInf fun y => ?_
+    grw [← le_himp, le_himp_iff, top_inf_eq, BVSet.mem_sep (by fun_prop), inf_le_right (a := _ ∈ᴮ BVSet.prod _ _)]
+    refine iSup_le fun o₁' => ?_
+    rw [BVSet.kpair_eq_kpair]
+    by_cases ho₁' : o₁' = Ordinal.ToType.mk ⟨o₁, ho₁⟩
+    · subst ho₁'
+      simp only [OrderIso.symm_apply_apply, BVSet.eq_refl, le_top, inf_of_le_right, le_himp_iff]
+      grw [BVSet.mem_sep (by fun_prop), inf_le_right (a := _ ∈ᴮ BVSet.prod _ _), inf_iSup_eq]
+      refine iSup_le fun o₂' => ?_
+      rw [BVSet.kpair_eq_kpair]
+      by_cases ho₂' : o₂' = Ordinal.ToType.mk ⟨o₂, ho₂⟩
+      · subst ho₂'
+        simp only [OrderIso.symm_apply_apply, BVSet.eq_refl, le_top, inf_of_le_right]
+        grw [BVSet.eq_symm y, BVSet.eq_trans]
+        by_cases h : o₁ = o₂
+        · simp [h]
+        · grw [cohenReal_ne_cohenReal (by simpa), bot_le]
+      · rw [ZFSet.toBVSet_eq_toBVSet_of_ne fun ne => by rw [toZFSet_injective.eq_iff] at ne; simp [ne] at ho₂']
+        simp
+    · rw [ZFSet.toBVSet_eq_toBVSet_of_ne fun ne => by rw [toZFSet_injective.eq_iff] at ne; simp [ne] at ho₁']
+      simp
+
+theorem not_ch (h : 1 < α) :
+    ⨆ x : BVSet.{u, u} 𝔹, ωᴮ <ᴮ x ⊓ x <ᴮ 𝒫ᴮ ωᴮ = (⊤ : 𝔹) := by
+  rw [eq_top_iff]
+  refine le_iSup_of_le (ω₁).toZFSet.toBVSet (le_inf ?_ ?_)
+  · rw [BVSet.omega_def, ZFSet.cardLT_toBVSet_of_card_lt_card (by simpa using Cardinal.aleph0_lt_aleph_one)]
+  · grw [← BVSet.cardLT_trans_cardLE (v := (ω_ α).toZFSet.toBVSet),
+      ZFSet.cardLT_toBVSet_of_card_lt_card (by simpa), cardLE_powerset_omega, top_inf_eq]
+
+end Cohen

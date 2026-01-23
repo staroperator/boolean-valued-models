@@ -51,6 +51,10 @@ instance : PartialOrder (Finmap β) where
 
 theorem le_def : f ≤ g ↔ g.entries ⊆ f.entries := Iff.rfl
 
+theorem insert_le_of_notMem [DecidableEq α] {a b} (h : a ∉ f) : f.insert a b ≤ f := by
+  rw [le_def, entries_insert_of_notMem h]
+  apply Multiset.subset_cons
+
 def embedPi (f : Finmap β) : Set (∀ a, β a) :=
   {g | ∀ a ∈ f.entries, g a.1 = a.2}
 
@@ -140,7 +144,12 @@ instance [∀ a, Nontrivial (β a)] : BooleanCompletion (Finmap β) (RegularOpen
     rw [hg, ← hab.2]
     exact ht _ hab.1
 
+theorem forces_iff [∀ a, Nontrivial (β a)] (p : Finmap β) (s : RegularOpenSet (∀ a, β a)) :
+    p ⊩ s ↔ ∀ f, (∀ a ∈ p.entries, f a.1 = a.2) → f ∈ s := Iff.rfl
+
 end Finmap
+
+abbrev Finmap' (α β : Type*) := Finmap fun _ : α => β
 
 instance [∀ a, Countable (β a)] : CountableChainCondition (RegularOpenSet (∀ a, β a)) where
   ccc S hS := by

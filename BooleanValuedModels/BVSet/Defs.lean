@@ -735,6 +735,12 @@ theorem mem_sep {f} (hf : IsExtentional f) : u ∈ᴮ sep v f = u ∈ᴮ v ⊓ f
   · simp only [le_inf_iff, inf_le_left, and_true]
     apply hf
 
+theorem mem_sep_le_mem {f} (hf : IsExtentional f) : u ∈ᴮ sep v f ≤ u ∈ᴮ v := by
+  grw [mem_sep hf, inf_le_left]
+
+theorem mem_sep_le_apply {f} (hf : IsExtentional f) : u ∈ᴮ sep v f ≤ f u := by
+  grw [mem_sep hf, inf_le_right]
+
 @[fun_prop] theorem IsExtentionalFun.sep {f} {g : BVSet B → BVSet B → B}
     (hf : IsExtentionalFun f) (hg : IsExtentional₂ g) :
     IsExtentionalFun fun x => sep (f x) (g x) := by

@@ -17,9 +17,13 @@ infix:50 " ⊩ " => Forces
 
 variable {p q : α} {a b c : β}
 
-theorem Forces.le : p ⊩ a → q ≤ p → q ⊩ a := by
+theorem Forces.weaken : p ⊩ a → q ≤ p → q ⊩ a := by
   rw [← (embed (α := α) (β := β)).le_iff_le]
   exact le_trans'
+
+@[gcongr]
+theorem forces_of_le_of_forces : a ≤ b → p ⊩ a → p ⊩ b :=
+  le_trans'
 
 @[simp]
 theorem forces_top : p ⊩ (⊤ : β) := by

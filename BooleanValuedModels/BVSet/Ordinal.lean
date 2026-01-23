@@ -5,6 +5,8 @@ universe u v
 
 variable {B : Type u} [CompleteBooleanAlgebra B] {u v w : BVSet.{u, v} B}
 
+open BVSet ZFSet Ordinal
+
 namespace BVSet
 
 def isTransitive (u : BVSet B) : B :=
@@ -25,13 +27,6 @@ theorem isTransitive_inf_mem_le (u v : BVSet B) : isTransitive u ⊓ v ∈ᴮ u 
 
 @[simp] theorem isTransitive_empty : isTransitive ∅ = (⊤ : B) := by
   simp [isTransitive]
-
-theorem _root_.ZFSet.isTransitive_toBVSet_of_isTransitive {x : ZFSet.{v}} (hx : x.IsTransitive) :
-    isTransitive x.toBVSet = (⊤ : B) := by
-  simp only [isTransitive, eq_top_iff]
-  rw [IsExtentional.iInf_mem_toBVSet_himp (by fun_prop), le_iInf_iff]
-  intro ⟨y, hy⟩
-  simp [ZFSet.toBVSet_subset_toBVSet_of_subset (hx _ hy)]
 
 def isOrdinal (u : BVSet B) : B :=
   isTransitive u ⊓ ⨅ x, x ∈ᴮ u ⇨ ⨅ y, y ∈ᴮ u ⇨ x ∈ᴮ y ⊔ x =ᴮ y ⊔ y ∈ᴮ x
@@ -204,7 +199,18 @@ theorem isOrdinal_trichotomous :
   · grw [inf_le_right]
     exact le_sup_right
 
-theorem _root_.ZFSet.isOrdinal_toBVSet_of_isOrdinal {x : ZFSet.{v}} (hx : x.IsOrdinal) :
+end BVSet
+
+namespace ZFSet
+
+theorem isTransitive_toBVSet_of_isTransitive {x : ZFSet.{v}} (hx : x.IsTransitive) :
+    isTransitive x.toBVSet = (⊤ : B) := by
+  simp only [isTransitive, eq_top_iff]
+  rw [IsExtentional.iInf_mem_toBVSet_himp (by fun_prop), le_iInf_iff]
+  intro ⟨y, hy⟩
+  simp [ZFSet.toBVSet_subset_toBVSet_of_subset (hx _ hy)]
+
+theorem isOrdinal_toBVSet_of_isOrdinal {x : ZFSet.{v}} (hx : x.IsOrdinal) :
     isOrdinal x.toBVSet = (⊤ : B) := by
   simp only [isOrdinal, ZFSet.isTransitive_toBVSet_of_isTransitive hx.isTransitive, top_inf_eq, eq_top_iff]
   rw [IsExtentional.iInf_mem_toBVSet_himp (by fun_prop), le_iInf_iff]
@@ -218,15 +224,21 @@ theorem _root_.ZFSet.isOrdinal_toBVSet_of_isOrdinal {x : ZFSet.{v}} (hx : x.IsOr
   · simp [h, eq_refl]
   · simp [ZFSet.toBVSet_mem_toBVSet_of_mem h]
 
-theorem _root_.ZFSet.isOrdinal_toBVSet {o : Ordinal} :
+@[simp] theorem isOrdinal_toBVSet (o : Ordinal) :
     isOrdinal o.toZFSet.toBVSet = (⊤ : B) :=
   ZFSet.isOrdinal_toBVSet_of_isOrdinal (ZFSet.isOrdinal_toZFSet o)
 
-theorem isOrdinal_eq_iSup_eq {u : BVSet.{u, max u v} B} :
-    isOrdinal u = ⨆ o : Ordinal.{max u v}, u =ᴮ o.toZFSet.toBVSet := by
+end ZFSet
+
+open ZFSet
+
+namespace BVSet
+
+theorem isOrdinal_eq_iSup_eq [Small.{v} B] {u : BVSet.{u, v} B} :
+    isOrdinal u = ⨆ o : Ordinal.{v}, u =ᴮ o.toZFSet.toBVSet := by
   apply le_antisymm
   · let f : u.Index → Set Ordinal := fun i => {o : Ordinal | o.toZFSet.toBVSet =ᴮ (i : BVSet B) ≠ ⊥}
-    haveI : ∀ i, Small.{max u v} (f i) := fun i =>
+    haveI : ∀ i, Small.{v} (f i) := fun i =>
       small_of_injective (f := fun ⟨o, _⟩ => o.toZFSet.toBVSet =ᴮ (i : BVSet B)) fun ⟨o₁, ho₁⟩ ⟨o₂, ho₂⟩ h => by
         simp only [ne_eq, Set.mem_setOf_eq, f, ← bot_lt_iff_ne_bot] at ho₁ ho₂
         simp only at h
@@ -261,18 +273,57 @@ theorem isOrdinal_eq_iSup_eq {u : BVSet.{u, max u v} B} :
     grw [← IsExtentional.eq_inf_le' isOrdinal (by fun_prop) o.toZFSet.toBVSet]
     simp [ZFSet.isOrdinal_toBVSet]
 
-theorem IsExtentional.iInf_isOrdinal_himp {f} (hf : IsExtentional f) :
-    ⨅ x : BVSet.{u, max u v} B, isOrdinal x ⇨ f x = ⨅ o : Ordinal.{max u v}, f o.toZFSet.toBVSet := by
-  simp_rw [isOrdinal_eq_iSup_eq.{u, v}, iSup_himp_eq]
+theorem IsExtentional.iInf_isOrdinal_himp [Small.{v} B] {f} (hf : IsExtentional f) :
+    ⨅ x : BVSet.{u, v} B, isOrdinal x ⇨ f x = ⨅ o : Ordinal.{v}, f o.toZFSet.toBVSet := by
+  simp_rw [isOrdinal_eq_iSup_eq, iSup_himp_eq]
   rw [iInf_comm]
   congr! with o
   rw [hf.iInf_eq_himp]
 
-theorem IsExtentional.iSup_isOrdinal_inf {f} (hf : IsExtentional f) :
-    ⨆ x : BVSet.{u, max u v} B, isOrdinal x ⊓ f x = ⨆ o : Ordinal.{max u v}, f o.toZFSet.toBVSet := by
-  simp_rw [isOrdinal_eq_iSup_eq.{u, v}, iSup_inf_eq]
+theorem IsExtentional.iSup_isOrdinal_inf [Small.{v} B] {f} (hf : IsExtentional f) :
+    ⨆ x : BVSet.{u, v} B, isOrdinal x ⊓ f x = ⨆ o : Ordinal.{v}, f o.toZFSet.toBVSet := by
+  simp_rw [isOrdinal_eq_iSup_eq, iSup_inf_eq]
   rw [iSup_comm]
   congr! with o
   rw [hf.iSup_eq_inf]
+
+
+
+instance : NatCast (BVSet B) := ⟨(ZFSet.toBVSet <| Ordinal.toZFSet ·)⟩
+
+theorem natCast_def (n : ℕ) : (n : BVSet B) = (n : Ordinal).toZFSet.toBVSet := rfl
+
+theorem natCast_eq_natCast {n m : ℕ} :
+    (n : BVSet B) =ᴮ m = if n = m then ⊤ else ⊥ := by
+  split_ifs with h
+  · simp [h]
+  · rw [natCast_def, natCast_def, ZFSet.toBVSet_eq_toBVSet_of_ne (by simpa [toZFSet_injective.eq_iff])]
+
+def omega : BVSet B := (ω).toZFSet.toBVSet
+
+notation "ωᴮ" => omega
+
+theorem omega_def : (ωᴮ : BVSet B) = (ω).toZFSet.toBVSet := rfl
+
+theorem empty_mem_omega : ∅ ∈ᴮ ωᴮ = (⊤ : B) := by
+  grw [← ZFSet.toBVSet_empty, ← Ordinal.toZFSet_zero]
+  exact ZFSet.toBVSet_mem_toBVSet_of_mem (Ordinal.toZFSet_mem_toZFSet_iff.2 Ordinal.omega0_pos)
+
+theorem le_succ_mem_omega {u : BVSet B} : u ∈ᴮ ωᴮ ≤ insert u u ∈ᴮ ωᴮ := by
+  rw [omega_def, ZFSet.mem_toBVSet, ZFSet.mem_toBVSet]
+  apply iSup_le
+  intro ⟨x, hx⟩
+  simp only [mem_toZFSet_iff, lt_omega0, ↓existsAndEq, true_and] at hx
+  rcases hx with ⟨n, rfl⟩
+  refine le_iSup_of_le ⟨insert (n : Ordinal).toZFSet (n : Ordinal).toZFSet, ?_⟩ ?_
+  · rw [← toZFSet_succ, toZFSet_mem_toZFSet_iff, ← add_one_eq_succ, ← Nat.cast_succ, lt_omega0]
+    exact ⟨_, rfl⟩
+  · simp only
+    grw [← IsExtentional.eq_inf_le' (fun y => insert y y =ᴮ ZFSet.toBVSet _) (by fun_prop) (n : Ordinal).toZFSet.toBVSet,
+      ← ZFSet.toBVSet_insert]
+    simp
+
+theorem natCast_mem_omega {n : ℕ} : n ∈ᴮ ωᴮ = (⊤ : B) := by
+  rw [natCast_def, omega_def, toBVSet_mem_toBVSet_of_mem (by simp [Ordinal.lt_omega0])]
 
 end BVSet
