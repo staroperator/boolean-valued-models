@@ -84,12 +84,8 @@ def axiomOfInfinity : set.Sentence :=
 def axiomOfRegularity : set.Sentence :=
   ∀' (∃' (&1 ∈' &0) ⟹ ∃' (&1 ∈' &0 ⊓ ∼ (∃' (&2 ∈' &1 ⊓ &2 ∈' &0))))
 
--- ∀ x₁, ⋯, xₙ a, ∃ b, ∀ x, x ∈ b ↔ x ∈ a ∧ φ(x₁, ⋯, xₙ, x)
-noncomputable def axiomOfSeparation {α : Type*} [Finite α] (φ : set.Formula (α ⊕ Fin 1)) : set.Sentence :=
-  Formula.iAlls α (∀' ∃' ∀' (&2 ∈' &1 ⇔ &2 ∈' &0 ⊓ BoundedFormula.relabel (k := 0) (Sum.map Sum.inr ![2]) φ))
-
 -- ∀ x₁, ⋯, xₙ a, (∀ x ∈ a, ∃! y, φ(x₁, ⋯, xₙ, x, y)) → ∃ b, ∀ y, x ∈ b ↔ ∃ x ∈ a ∧ φ(x₁, ⋯, xₙ, x y)
-noncomputable def axiomOfReplacement {α : Type*} [Finite α] (φ : set.Formula (α ⊕ Fin 2)) : set.Sentence :=
+noncomputable def axiomOfReplacement [Finite α] (φ : set.Formula (α ⊕ Fin 2)) : set.Sentence :=
   Formula.iAlls α (∀' (
     (∀' (&1 ∈' &0 ⟹ ∃' (BoundedFormula.relabel (k := 0) (Sum.map Sum.inr ![1, 2]) φ)
       ⊓ ∀' ∀' (BoundedFormula.relabel (k := 0) (Sum.map Sum.inr ![1, 2]) φ
@@ -97,12 +93,6 @@ noncomputable def axiomOfReplacement {α : Type*} [Finite α] (φ : set.Formula 
           ⟹ &2 =' &3)))
     ⟹ ∃' ∀' (&2 ∈' &1 ⇔ ∃' (&3 ∈' &0
       ⊓ BoundedFormula.relabel (k := 0) (Sum.map Sum.inr ![3, 2]) φ))))
-
--- ∀ x₁, ⋯, xₙ a, (∀ x ∈ a, ∃ y, φ(x₁, ⋯, xₙ, x, y)) → ∃ b, ∀ x, x ∈ a → ∃ y ∈ b ∧ φ(x₁, ⋯, xₙ, x, y)
-noncomputable def axiomOfCollection {α : Type*} [Finite α] (φ : set.Formula (α ⊕ Fin 2)) : set.Sentence :=
-  Formula.iAlls α (∀' (
-    (∀' (&1 ∈' &0 ⟹ ∃' (BoundedFormula.relabel (k := 0) (Sum.map Sum.inr ![1, 2]) φ)))
-      ⟹ ∃' ∀' (&2 ∈' &0 ⟹ ∃' (&3 ∈' &1 ⊓ BoundedFormula.relabel (k := 0) (Sum.map Sum.inr ![2, 3]) φ))))
 
 def kpair (t₁ t₂ : set.Term α) : set.Term α :=
   {{t₁}, {t₁, t₂}}

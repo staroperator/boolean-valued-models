@@ -106,7 +106,8 @@ theorem toBVSet_empty : (toBVSet ∅ : BVSet B) ≈ ∅ := by
   apply BVSet.ext
   simp [mem_toBVSet]
 
-theorem toBVSet_insert : (insert x y).toBVSet ≈ insert (x.toBVSet : BVSet B) (y.toBVSet : BVSet B) := by
+theorem toBVSet_insert :
+    (insert x y).toBVSet ≈ insert (x.toBVSet : BVSet B) (y.toBVSet : BVSet B) := by
   apply BVSet.ext
   simp only [mem_toBVSet, BVSet.mem_insert]
   intro z

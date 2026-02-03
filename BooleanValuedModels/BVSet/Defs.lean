@@ -515,7 +515,8 @@ theorem le_subset_insert : u ⊆ᴮ w ≤ u ⊆ᴮ insert v w := by
   grw [iInf_le _ x, himp_inf_le, ← le_sup_right]
 
 @[fun_prop] theorem IsExtentionalFun.insert {f g : BVSet B → BVSet B}
-    (hf : IsExtentionalFun f) (hg : IsExtentionalFun g) : IsExtentionalFun fun x => insert (f x) (g x) := by
+    (hf : IsExtentionalFun f) (hg : IsExtentionalFun g) :
+    IsExtentionalFun fun x => insert (f x) (g x) := by
   apply of_isExtentional
   intro x
   simp only [mem_insert]
@@ -680,7 +681,8 @@ prefix:110 "𝒫ᴮ " => powerset
     rw [le_inf_iff]
     constructor
     · conv_rhs =>
-        simp only [subset_def, Index_mk, val_mk, Function.comp_apply, Equiv.symm_apply_apply, dom_mk]
+        simp only [subset_def, Index_mk, val_mk, Function.comp_apply, Equiv.symm_apply_apply,
+          dom_mk]
       rw [le_iInf_iff]
       intro x
       rw [subset_def']

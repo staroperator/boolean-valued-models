@@ -4,7 +4,8 @@ import Mathlib.ModelTheory.Satisfiability
 
 namespace FirstOrder.Language
 
-class BVStructure (L : Language.{u, v}) (M : Type*) (B : outParam Type*) [CompleteBooleanAlgebra B] where
+class BVStructure (L : Language.{u, v}) (M : Type*) (B : outParam Type*) [CompleteBooleanAlgebra B]
+    where
   funMap : ∀ {n}, L.Functions n → (Fin n → M) → M
   relMap : ∀ {n}, L.Relations n → (Fin n → M) → B
   eq : M → M → B
@@ -82,7 +83,8 @@ theorem bvrealize_not : φ.not.bvrealize v xs = (φ.bvrealize v xs)ᶜ := by
 
 @[simp]
 theorem bvrealize_bdEqual (t₁ t₂ : L.Term (α ⊕ Fin n)) :
-    (t₁.bdEqual t₂).bvrealize v xs = eq L (t₁.bvrealize (Sum.elim v xs)) (t₂.bvrealize (Sum.elim v xs)) :=
+    (t₁.bdEqual t₂).bvrealize v xs
+      = eq L (t₁.bvrealize (Sum.elim v xs)) (t₂.bvrealize (Sum.elim v xs)) :=
   rfl
 
 @[simp]
@@ -105,7 +107,8 @@ theorem bvrealize_ex : θ.ex.bvrealize v xs = ⨆ a : M, θ.bvrealize v (Fin.sno
   simp [BoundedFormula.ex, compl_iInf]
 
 @[simp]
-theorem bvrealize_iff : (φ.iff ψ).bvrealize v xs = bihimp (φ.bvrealize v xs) (ψ.bvrealize v xs) := by
+theorem bvrealize_iff :
+    (φ.iff ψ).bvrealize v xs = bihimp (φ.bvrealize v xs) (ψ.bvrealize v xs) := by
   simpa [BoundedFormula.iff, bihimp_def] using inf_comm _ _
 
 theorem bvrealize_mapTermRel_add_castLe {β} {L' : Language} [L'.BVStructure M B] {k : ℕ}
@@ -193,7 +196,8 @@ theorem bvrealize_alls {v : α → M} :
   | zero => simp [alls, Formula.bvrealize]
   | succ n ih =>
     simp only [alls, ih, bvrealize]
-    refine le_antisymm (le_iInf fun v => iInf_le_of_le (Fin.init v) <| iInf_le_of_le (v (Fin.last _)) ?_)
+    refine le_antisymm
+      (le_iInf fun v => iInf_le_of_le (Fin.init v) <| iInf_le_of_le (v (Fin.last _)) ?_)
       (le_iInf fun v => le_iInf fun a => iInf_le_of_le (Fin.snoc v a) ?_) <;> simp
 
 @[simp]
@@ -301,12 +305,14 @@ instance quotientStructure : L.Structure (QuotientStructure L M F) where
 
 @[simp]
 theorem QuotientStructure.funMap_mk {n} {f : L.Functions n} {v : Fin n → M} :
-    Structure.funMap f (fun i => Quotient.mk (ultraFilterSetoid L M F) (v i)) = ⟦BVStructure.funMap f v⟧ := by
+    Structure.funMap f (fun i => Quotient.mk (ultraFilterSetoid L M F) (v i))
+      = ⟦BVStructure.funMap f v⟧ := by
   simp [quotientStructure]
 
 @[simp]
 theorem QuotientStructure.relMap_mk {n} {r : L.Relations n} {v : Fin n → M} :
-    Structure.RelMap r (fun i => Quotient.mk (ultraFilterSetoid L M F) (v i)) ↔ BVStructure.relMap r v ∈ F := by
+    Structure.RelMap r (fun i => Quotient.mk (ultraFilterSetoid L M F) (v i))
+      ↔ BVStructure.relMap r v ∈ F := by
   simp [quotientStructure]
 
 @[simp]
@@ -314,25 +320,29 @@ theorem QuotientStructure.term_realize {t : L.Term α} {v : α → M} :
     t.realize (fun i => Quotient.mk (ultraFilterSetoid L M F) (v i)) = ⟦t.bvrealize v⟧ := by
   induction t with simp [*]
 
-class IsFull (L : Language) (M : Type*) (B : outParam Type*) [CompleteBooleanAlgebra B] [L.BVStructure M B] where
+class IsFull (L : Language) (M : Type*) (B : outParam Type*) [CompleteBooleanAlgebra B]
+    [L.BVStructure M B] where
   exists_eq_iSup : ∀ {α : Type w} {n} (φ : L.BoundedFormula α (n + 1)) (v : α → M) (xs : Fin n → M),
     ∃ (a : M), φ.bvrealize v (Fin.snoc xs a) = ⨆ x, φ.bvrealize v (Fin.snoc xs x)
 
 @[simp]
 theorem QuotientStructure.boundedFormula_realize [hM : IsFull.{w} L M B] [hF : F.IsUltra]
     {φ : L.BoundedFormula α n} {v : α → M} {xs : Fin n → M} :
-    φ.Realize (fun i => Quotient.mk (ultraFilterSetoid L M F) (v i)) (fun i => Quotient.mk (ultraFilterSetoid L M F) (xs i)) ↔
-      φ.bvrealize v xs ∈ F := by
+    φ.Realize (fun i => Quotient.mk (ultraFilterSetoid L M F) (v i))
+      (fun i => Quotient.mk (ultraFilterSetoid L M F) (xs i)) ↔ φ.bvrealize v xs ∈ F := by
   induction φ with
   | falsum =>
     simp [BoundedFormula.Realize, BoundedFormula.bvrealize, hF.isProper.bot_notMem]
   | equal =>
     simp only [BoundedFormula.Realize, BoundedFormula.bvrealize]
-    rw [← Function.comp_def, ← Function.comp_def, ← Sum.comp_elim, Function.comp_def, term_realize, term_realize,
-      Quotient.eq_iff_equiv, equiv_def]
+    rw [← Function.comp_def, ← Function.comp_def, ← Sum.comp_elim, Function.comp_def, term_realize,
+      term_realize, Quotient.eq_iff_equiv, equiv_def]
   | rel =>
     simp only [BoundedFormula.Realize, BoundedFormula.bvrealize]
-    conv_lhs => enter [2, i]; rw [← Function.comp_def, ← Function.comp_def, ← Sum.comp_elim, Function.comp_def, term_realize]
+    conv_lhs =>
+      enter [2, i]
+      rw [← Function.comp_def, ← Function.comp_def, ← Sum.comp_elim, Function.comp_def,
+        term_realize]
     rw [relMap_mk]
   | imp _ _ ih₁ ih₂ =>
     simp [hF.himp_mem_iff, ih₁, ih₂]
@@ -354,13 +364,15 @@ theorem QuotientStructure.boundedFormula_realize [hM : IsFull.{w} L M B] [hF : F
       cases i using Fin.lastCases with simp
 
 @[simp]
-theorem QuotientStructure.formula_realize [hM : IsFull.{w} L M B] [hF : F.IsUltra] {φ : L.Formula α} {v : α → M} :
+theorem QuotientStructure.formula_realize [hM : IsFull.{w} L M B] [hF : F.IsUltra] {φ : L.Formula α}
+    {v : α → M} :
     φ.Realize (fun i => Quotient.mk (ultraFilterSetoid L M F) (v i)) ↔ φ.bvrealize v ∈ F := by
   rw [Formula.Realize, Formula.bvrealize]
   convert boundedFormula_realize (hF := hF) (φ := φ) (v := v) (xs := default)
 
 @[simp]
-theorem QuotientStructure.sentence_realize [hM : IsFull.{0} L M B] [hF : F.IsUltra] {φ : L.Sentence} :
+theorem QuotientStructure.sentence_realize [hM : IsFull.{0} L M B] [hF : F.IsUltra]
+    {φ : L.Sentence} :
     QuotientStructure L M F ⊨ φ ↔ φ.bvrealize M ∈ F := by
   rw [Sentence.Realize, Sentence.bvrealize]
   convert formula_realize (F := F) (M := M) (φ := φ)

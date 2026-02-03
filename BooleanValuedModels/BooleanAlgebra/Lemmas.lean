@@ -63,8 +63,8 @@ theorem forall_lt_of_lt_iInf {α ι} [CompleteLattice α] {f : ι → α} {a} :
   intro ⟨b, hb, h⟩ i
   exact hb.trans_le (h i)
 
-theorem Set.Finite.biInf_iSup_eq {α ι} {κ : ι → Sort*} [Nonempty (∀ a, κ a)] [Order.Frame α] {s : Set ι}
-    (hs : s.Finite) {f : ∀ a, κ a → α} :
+theorem Set.Finite.biInf_iSup_eq {α ι} {κ : ι → Sort*} [Nonempty (∀ a, κ a)] [Order.Frame α]
+    {s : Set ι} (hs : s.Finite) {f : ∀ a, κ a → α} :
     ⨅ a ∈ s, ⨆ b, f a b = ⨆ g : ∀ a, κ a, ⨅ a ∈ s, f a (g a) := by
   classical
   induction s, hs using Finite.induction_on with
@@ -91,7 +91,8 @@ theorem iInf_iSup_eq_of_finite {α ι} {κ : ι → Sort*} [Order.Frame α] [Fin
 
 theorem iSup_fin_succ {α n} {f : Fin (n + 1) → α} [CompleteLattice α] :
     ⨆ x, f x = f 0 ⊔ ⨆ x : Fin n, f x.succ :=
-  le_antisymm (iSup_le (Fin.cases le_sup_left (fun i => le_sup_of_le_right <| le_iSup_of_le i le_rfl)))
+  le_antisymm
+    (iSup_le (Fin.cases le_sup_left (fun i => le_sup_of_le_right <| le_iSup_of_le i le_rfl)))
     (sup_le (le_iSup f 0) (iSup_le fun i => le_iSup_of_le i.succ le_rfl))
 
 theorem iInf_fin_succ {α n} {f : Fin (n + 1) → α} [CompleteLattice α] :

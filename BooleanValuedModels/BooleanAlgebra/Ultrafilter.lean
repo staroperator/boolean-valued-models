@@ -90,7 +90,8 @@ theorem IsProper.exists_le_maximal {I : Ideal P} (hI : I.IsProper) : ∃ J ≥ I
 
 theorem exists_maximal [Nontrivial P] : ∃ (I : Ideal P), I.IsMaximal := by
   have : (⊥ : Ideal P).IsProper := by
-    rw [isProper_iff_ne_top, ← principal_bot, ← SetLike.coe_ne_coe, coe_top, Set.ne_univ_iff_exists_notMem]
+    rw [isProper_iff_ne_top, ← principal_bot, ← SetLike.coe_ne_coe, coe_top,
+      Set.ne_univ_iff_exists_notMem]
     simp_rw [SetLike.mem_coe, mem_principal, le_bot_iff]
     exact exists_ne _
   rcases IsProper.exists_le_maximal this with ⟨I, -, hI⟩
@@ -122,7 +123,8 @@ abbrev IsUltra (F : PFilter P) :=
 
 theorem IsUltra.isProper {F : PFilter P} (hF : F.IsUltra) : F.IsProper := hF.1
 
-theorem IsUltra.maximal_proper {F G : PFilter P} (hF : F.IsUltra) (hG : F < G) : (G : Set P) = Set.univ := hF.2 hG
+theorem IsUltra.maximal_proper {F G : PFilter P} (hF : F.IsUltra) (hG : F < G) :
+    (G : Set P) = Set.univ := hF.2 hG
 
 end Preorder
 
@@ -145,7 +147,8 @@ end Directed
 section OrderBot
 
 theorem eq_top_iff_bot_mem [Preorder P] [OrderBot P] {F : PFilter P} : F = ⊤ ↔ ⊥ ∈ F :=
-  Iff.trans (by rw [← dualIso.map_top]; exact dualIso.apply_eq_iff_eq.symm) F.dual.eq_top_iff_top_mem
+  Iff.trans (by rw [← dualIso.map_top]; exact dualIso.apply_eq_iff_eq.symm)
+    F.dual.eq_top_iff_top_mem
 
 theorem isProper_iff_bot_notMem [Preorder P] [OrderBot P] {F : PFilter P} :
     F.IsProper ↔ ⊥ ∉ F := by
@@ -217,7 +220,8 @@ theorem IsUltra.mem_iff_compl_notMem (hF : IsUltra F) : x ∈ F ↔ xᶜ ∉ F :
   ⟨hF.isProper.compl_notMem_of_mem, (hF.mem_or_compl_mem x).resolve_right⟩
 
 theorem IsUltra.sup_mem_iff (hF : IsUltra F) : x ⊔ y ∈ F ↔ x ∈ F ∨ y ∈ F := by
-  rw [hF.mem_iff_compl_notMem, compl_sup, F.inf_mem_iff, not_and_or, ← hF.mem_iff_compl_notMem, ← hF.mem_iff_compl_notMem]
+  rw [hF.mem_iff_compl_notMem, compl_sup, F.inf_mem_iff, not_and_or, ← hF.mem_iff_compl_notMem,
+    ← hF.mem_iff_compl_notMem]
 
 theorem IsUltra.himp_mem_iff (hF : IsUltra F) : x ⇨ y ∈ F ↔ x ∈ F → y ∈ F := by
   rw [himp_eq, hF.sup_mem_iff, hF.compl_mem_iff_notMem]
@@ -227,8 +231,8 @@ end BooleanAlgebra
 
 section CompleteBooleanAlgebra
 
-theorem IsUltra.iSup_mem_iff [CompleteBooleanAlgebra P] {F : PFilter P} (hF : IsUltra F) {α} [Finite α] {f : α → P} :
-    ⨆ i, f i ∈ F ↔ ∃ i, f i ∈ F := by
+theorem IsUltra.iSup_mem_iff [CompleteBooleanAlgebra P] {F : PFilter P} (hF : IsUltra F) {α}
+    [Finite α] {f : α → P} : ⨆ i, f i ∈ F ↔ ∃ i, f i ∈ F := by
   rw [hF.mem_iff_compl_notMem, compl_iSup, F.iInf_mem_iff, not_forall]
   simp_rw [hF.compl_mem_iff_notMem, not_not]
 

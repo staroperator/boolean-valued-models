@@ -17,7 +17,8 @@ theorem IsOpen.interior_closure_inter {s t : Set X} (hs : IsOpen s) :
     interior (closure (s ∩ t)) = interior (closure s) ∩ interior (closure t) := by
   apply subset_antisymm
   · grw [closure_inter_subset, interior_inter]
-  · grw [isOpen_interior.interior_closure_inter_subset, hs.inter_interior_closure_subset, interior_closure_idem]
+  · grw [isOpen_interior.interior_closure_inter_subset, hs.inter_interior_closure_subset,
+      interior_closure_idem]
 
 theorem IsOpen.interior_closure_inter' {s t : Set X} (ht : IsOpen t) :
     interior (closure (s ∩ t)) = interior (closure s) ∩ interior (closure t) := by
@@ -60,7 +61,8 @@ theorem frontier_closure_eq (hs : IsRegularOpen s) : frontier (closure s) = fron
   exact frontier_interior_subset
 
 theorem inter (hs : IsRegularOpen s) (ht : IsRegularOpen t) : IsRegularOpen (s ∩ t) := by
-  rw [isRegularOpen_iff, hs.isOpen.interior_closure_inter, hs.interior_closure_eq, ht.interior_closure_eq]
+  rw [isRegularOpen_iff, hs.isOpen.interior_closure_inter, hs.interior_closure_eq,
+    ht.interior_closure_eq]
 
 end IsRegularOpen
 
@@ -106,7 +108,8 @@ instance : BooleanAlgebra (RegularOpenSet X) where
   inf_le_right _ _ := Set.inter_subset_right
   le_inf _ _ _ := Set.subset_inter
   le_sup_inf s t u := by
-    change interior (closure (s ∪ t)) ∩ interior (closure (s ∪ u)) ⊆ interior (closure (s ∪ t ∩ (u : Set X)))
+    change interior (closure (s ∪ t)) ∩ interior (closure (s ∪ u))
+      ⊆ interior (closure (s ∪ t ∩ (u : Set X)))
     rw [← (s.isOpen.union t.isOpen).interior_closure_inter]
     gcongr
     rw [Set.union_inter_distrib_left]
@@ -120,11 +123,21 @@ instance : BooleanAlgebra (RegularOpenSet X) where
     grw [← subset_closure]
     rw [Set.union_compl_self, interior_univ]
 
-@[simp] theorem coe_top : ((⊤ : RegularOpenSet X) : Set X) = Set.univ := rfl
-@[simp] theorem coe_bot : ((⊥ : RegularOpenSet X) : Set X) = ∅ := rfl
-@[simp] theorem coe_sup : ((s ⊔ t : RegularOpenSet X) : Set X) = interior (closure ((s : Set X) ∪ t)) := rfl
-@[simp] theorem coe_inf : ((s ⊓ t : RegularOpenSet X) : Set X) = (s : Set X) ∩ t := rfl
-@[simp] theorem coe_compl : ((sᶜ : RegularOpenSet X) : Set X) = interior (s : Set X)ᶜ := rfl
+@[simp] theorem coe_top : ((⊤ : RegularOpenSet X) : Set X) = Set.univ :=
+  rfl
+
+@[simp] theorem coe_bot : ((⊥ : RegularOpenSet X) : Set X) = ∅ :=
+  rfl
+
+@[simp] theorem coe_sup :
+    ((s ⊔ t : RegularOpenSet X) : Set X) = interior (closure ((s : Set X) ∪ t)) :=
+  rfl
+
+@[simp] theorem coe_inf : ((s ⊓ t : RegularOpenSet X) : Set X) = (s : Set X) ∩ t :=
+  rfl
+
+@[simp] theorem coe_compl : ((sᶜ : RegularOpenSet X) : Set X) = interior (s : Set X)ᶜ :=
+  rfl
 
 theorem disjoint_iff : Disjoint s t ↔ (s : Set X) ∩ t = ∅ := by
   simp [_root_.disjoint_iff, ← SetLike.coe_set_eq]
@@ -154,15 +167,23 @@ instance : CompleteBooleanAlgebra (RegularOpenSet X) where
     exact Set.subset_iInter₂ hs
 
 @[simp] theorem coe_sSup {S : Set (RegularOpenSet X)} :
-    ((sSup S : RegularOpenSet X) : Set X) = interior (closure (⋃ s ∈ S, s)) := rfl
-@[simp] theorem coe_iSup {ι : Sort*} {s : ι → RegularOpenSet X} :
-    ((⨆ i, s i : RegularOpenSet X) : Set X) = interior (closure (⋃ i, s i)) := by simp [← sSup_range]
-@[simp] theorem coe_sInf {S : Set (RegularOpenSet X)} :
-    ((sInf S : RegularOpenSet X) : Set X) = interior (closure (⋂ s ∈ S, s)) := rfl
-@[simp] theorem coe_iInf {ι : Sort*} {s : ι → RegularOpenSet X} :
-    ((⨅ i, s i : RegularOpenSet X) : Set X) = interior (closure (⋂ i, s i)) := by simp [← sInf_range]
+    ((sSup S : RegularOpenSet X) : Set X) = interior (closure (⋃ s ∈ S, s)) :=
+  rfl
 
-instance [Nonempty X] : Nontrivial (RegularOpenSet X) := ⟨⊥, ⊤, SetLike.coe_ne_coe.1 Set.empty_ne_univ⟩
+@[simp] theorem coe_iSup {ι : Sort*} {s : ι → RegularOpenSet X} :
+    ((⨆ i, s i : RegularOpenSet X) : Set X) = interior (closure (⋃ i, s i)) := by
+  simp [← sSup_range]
+
+@[simp] theorem coe_sInf {S : Set (RegularOpenSet X)} :
+    ((sInf S : RegularOpenSet X) : Set X) = interior (closure (⋂ s ∈ S, s)) :=
+  rfl
+
+@[simp] theorem coe_iInf {ι : Sort*} {s : ι → RegularOpenSet X} :
+    ((⨅ i, s i : RegularOpenSet X) : Set X) = interior (closure (⋂ i, s i)) := by
+  simp [← sInf_range]
+
+instance [Nonempty X] : Nontrivial (RegularOpenSet X) :=
+  ⟨⊥, ⊤, SetLike.coe_ne_coe.1 Set.empty_ne_univ⟩
 
 end RegularOpenSet
 

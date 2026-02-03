@@ -51,7 +51,8 @@ theorem exists_choice_func [Small.{v} B] (u : BVSet.{u, v} B) :
     Classical.choose (IsExtentional.exists_eq_iSup (f := fun x => x ∈ᴮ (i : BVSet B)) (by fun_prop))
   have hc : ∀ i, c i ∈ᴮ i = i ≠ᴮ ∅ := fun i => by
     rw [ne_empty]
-    exact Classical.choose_spec (IsExtentional.exists_eq_iSup (f := fun x => x ∈ᴮ (i : BVSet B)) (by fun_prop))
+    exact Classical.choose_spec (IsExtentional.exists_eq_iSup (f := fun x => x ∈ᴮ (i : BVSet B))
+      (by fun_prop))
   let f : BVSet B := ⟨u.Index, fun i => kpair i (c i), b⟩
   refine le_iSup_of_le f (le_inf (le_inf (le_inf ?_ ?_) ?_) ?_)
   · rw [isRel_eq_subset_prod, subset_def]

@@ -1,4 +1,4 @@
-import BooleanValuedModels.BVSet.Defs
+import BooleanValuedModels.BVSet.ZFSet
 
 universe u v
 
@@ -188,12 +188,14 @@ theorem isFunc_total' {x} :
   grw [isFunc_total, iInf_le _ x, himp_inf_le]
 
 theorem isFunc_unique :
-    isFunc u v f ≤ ⨅ x, x ∈ᴮ u ⇨ ⨅ y₁, y₁ ∈ᴮ v ⇨ ⨅ y₂, y₂ ∈ᴮ v ⇨ kpair x y₁ ∈ᴮ f ⇨ kpair x y₂ ∈ᴮ f ⇨ y₁ =ᴮ y₂ :=
+    isFunc u v f ≤ ⨅ x, x ∈ᴮ u ⇨ ⨅ y₁, y₁ ∈ᴮ v ⇨ ⨅ y₂, y₂ ∈ᴮ v
+      ⇨ kpair x y₁ ∈ᴮ f ⇨ kpair x y₂ ∈ᴮ f ⇨ y₁ =ᴮ y₂ :=
   inf_le_right
 
 theorem isFunc_unique' {x y₁ y₂ : BVSet B} :
     isFunc u v f ⊓ x ∈ᴮ u ⊓ y₁ ∈ᴮ v ⊓ y₂ ∈ᴮ v ⊓ kpair x y₁ ∈ᴮ f ⊓ kpair x y₂ ∈ᴮ f ≤ y₁ =ᴮ y₂ := by
-  grw [isFunc_unique, iInf_le _ x, himp_inf_le, iInf_le _ y₁, himp_inf_le, iInf_le _ y₂, himp_inf_le, himp_inf_le, himp_inf_le]
+  grw [isFunc_unique, iInf_le _ x, himp_inf_le, iInf_le _ y₁, himp_inf_le, iInf_le _ y₂,
+    himp_inf_le, himp_inf_le, himp_inf_le]
 
 def isInjective (u v f : BVSet B) :=
   ⨅ x₁, x₁ ∈ᴮ u ⇨ ⨅ x₂, x₂ ∈ᴮ u ⇨ ⨅ y, y ∈ᴮ v ⇨ kpair x₁ y ∈ᴮ f ⇨ kpair x₂ y ∈ᴮ f ⇨ x₁ =ᴮ x₂
@@ -204,8 +206,8 @@ def isInjective (u v f : BVSet B) :=
   unfold isInjective
   fun_prop
 
-@[gcongr] theorem isInjective_congr {u₁ u₂ v₁ v₂ f₁ f₂ : BVSet B} (h₁ : u₁ ≈ u₂) (h₂ : v₁ ≈ v₂) (h₃ : f₁ ≈ f₂) :
-    isInjective u₁ v₁ f₁ = isInjective u₂ v₂ f₂ := by
+@[gcongr] theorem isInjective_congr {u₁ u₂ v₁ v₂ f₁ f₂ : BVSet B} (h₁ : u₁ ≈ u₂) (h₂ : v₁ ≈ v₂)
+    (h₃ : f₁ ≈ f₂) : isInjective u₁ v₁ f₁ = isInjective u₂ v₂ f₂ := by
   trans isInjective u₂ v₁ f₁
   · apply IsExtentional.congr _ h₁
     fun_prop
@@ -216,7 +218,8 @@ def isInjective (u v f : BVSet B) :=
     fun_prop
 
 theorem isInjective_injective {x₁ x₂ y : BVSet B} :
-    isInjective u v f ⊓ x₁ ∈ᴮ u ⊓ x₂ ∈ᴮ u ⊓ y ∈ᴮ v ⊓ kpair x₁ y ∈ᴮ f ⊓ kpair x₂ y ∈ᴮ f ≤ x₁ =ᴮ x₂ := by
+    isInjective u v f ⊓ x₁ ∈ᴮ u ⊓ x₂ ∈ᴮ u ⊓ y ∈ᴮ v ⊓ kpair x₁ y ∈ᴮ f ⊓ kpair x₂ y ∈ᴮ f
+      ≤ x₁ =ᴮ x₂ := by
   grw [isInjective, iInf_le _ x₁, himp_inf_le, iInf_le _ x₂, himp_inf_le, iInf_le _ y, himp_inf_le,
     himp_inf_le, himp_inf_le]
 
@@ -229,8 +232,8 @@ def isSurjective (u v f : BVSet B) :=
   unfold isSurjective
   fun_prop
 
-@[gcongr] theorem isSurjective_congr {u₁ u₂ v₁ v₂ f₁ f₂ : BVSet B} (h₁ : u₁ ≈ u₂) (h₂ : v₁ ≈ v₂) (h₃ : f₁ ≈ f₂) :
-    isSurjective u₁ v₁ f₁ = isSurjective u₂ v₂ f₂ := by
+@[gcongr] theorem isSurjective_congr {u₁ u₂ v₁ v₂ f₁ f₂ : BVSet B} (h₁ : u₁ ≈ u₂) (h₂ : v₁ ≈ v₂)
+    (h₃ : f₁ ≈ f₂) : isSurjective u₁ v₁ f₁ = isSurjective u₂ v₂ f₂ := by
   trans isSurjective u₂ v₁ f₁
   · apply IsExtentional.congr _ h₁
     fun_prop
@@ -241,3 +244,104 @@ def isSurjective (u v f : BVSet B) :=
     fun_prop
 
 end BVSet
+
+namespace ZFSet
+
+open BVSet
+
+variable {x y : ZFSet.{v}}
+
+theorem toBVSet_pair :
+    (x.pair y).toBVSet ≈ kpair (x.toBVSet : BVSet B) y.toBVSet := by
+  simp only [ZFSet.pair, kpair]
+  grw [ZFSet.toBVSet_insert, ZFSet.toBVSet_singleton, ZFSet.toBVSet_singleton, ZFSet.toBVSet_insert,
+    ZFSet.toBVSet_singleton]
+
+theorem toBVSet_prod [Small.{v} B] :
+    (x.prod y).toBVSet ≈ x.toBVSet.prod (y.toBVSet : BVSet B) := by
+  apply BVSet.ext
+  intro u
+  apply le_antisymm
+  · rw [ZFSet.mem_toBVSet]
+    apply iSup_le
+    intro ⟨z, hz⟩
+    simp only [mem_prod] at hz
+    rcases hz with ⟨z₁, hz₁, z₂, hz₂, rfl⟩
+    rw [BVSet.mem_prod, IsExtentional.iSup_mem_toBVSet_inf (by fun_prop)]
+    apply le_iSup_of_le ⟨z₁, hz₁⟩
+    rw [IsExtentional.iSup_mem_toBVSet_inf (by fun_prop)]
+    apply le_iSup_of_le ⟨z₂, hz₂⟩
+    simp only
+    grw [ZFSet.toBVSet_pair]
+  · rw [BVSet.mem_prod, IsExtentional.iSup_mem_toBVSet_inf (by fun_prop)]
+    apply iSup_le
+    intro ⟨z₁, hz₁⟩
+    rw [IsExtentional.iSup_mem_toBVSet_inf (by fun_prop)]
+    apply iSup_le
+    intro ⟨z₂, hz₂⟩
+    rw [ZFSet.mem_toBVSet]
+    apply le_iSup_of_le ⟨z₁.pair z₂, by simp [hz₁, hz₂]⟩
+    simp only
+    grw [ZFSet.toBVSet_pair]
+
+theorem isFunc_toBVSet_of_isFunc [Small.{v} B] {f : ZFSet} (h : ZFSet.IsFunc x y f) :
+    isFunc x.toBVSet y.toBVSet f.toBVSet = (⊤ : B) := by
+  unfold isFunc
+  rw [inf_eq_top_iff, inf_eq_top_iff]
+  refine ⟨⟨?_, ?_⟩, ?_⟩
+  · grw [isRel_eq_subset_prod, ← ZFSet.toBVSet_prod]
+    rw [ZFSet.toBVSet_subset_toBVSet_of_subset h.1]
+  · rw [isTotal, IsExtentional.iInf_mem_toBVSet_himp (by fun_prop), iInf_eq_top]
+    intro ⟨a, ha⟩
+    rw [IsExtentional.iSup_mem_toBVSet_inf (by fun_prop), eq_top_iff]
+    rcases h.2 a ha with ⟨b, hb, -⟩
+    have hb' := h.1 hb
+    simp only [ZFSet.mem_prod, ZFSet.pair_inj, exists_eq_right_right'] at hb'
+    apply le_iSup_of_le ⟨b, hb'.2⟩
+    simp only [top_le_iff]
+    grw [← ZFSet.toBVSet_pair, ZFSet.toBVSet_mem_toBVSet_of_mem hb]
+  · rw [isUnique, IsExtentional.iInf_mem_toBVSet_himp (by fun_prop), iInf_eq_top]
+    intro ⟨a, ha⟩
+    rw [IsExtentional.iInf_mem_toBVSet_himp (by fun_prop), iInf_eq_top]
+    intro ⟨b₁, hb₁⟩
+    rw [IsExtentional.iInf_mem_toBVSet_himp (by fun_prop), iInf_eq_top]
+    intro ⟨b₂, hb₂⟩
+    simp only [himp_eq_top_iff, le_himp_iff, ge_iff_le]
+    grw [← ZFSet.toBVSet_pair, ← ZFSet.toBVSet_pair]
+    by_cases h₁ : a.pair b₁ ∈ f
+    · by_cases h₂ : a.pair b₂ ∈ f
+      · simp [(h.2 a ha).unique h₁ h₂]
+      · simp [ZFSet.toBVSet_mem_toBVSet_of_notMem h₂]
+    · simp [ZFSet.toBVSet_mem_toBVSet_of_notMem h₁]
+
+theorem isInjective_toBVSet_of_injOn {f : ZFSet → ZFSet} [ZFSet.Definable₁ f] (hf : Set.InjOn f x) :
+    isInjective x.toBVSet y.toBVSet (ZFSet.map f x).toBVSet = (⊤ : B) := by
+  rw [eq_top_iff, isInjective, IsExtentional.iInf_mem_toBVSet_himp (by fun_prop)]
+  refine le_iInf fun z₁ => ?_
+  rw [IsExtentional.iInf_mem_toBVSet_himp (by fun_prop)]
+  refine le_iInf fun z₂ => ?_
+  rw [IsExtentional.iInf_mem_toBVSet_himp (by fun_prop)]
+  refine le_iInf fun z => ?_
+  grw [← ZFSet.toBVSet_pair, ← ZFSet.toBVSet_pair]
+  by_cases hz₁ : z₁.1.pair z ∈ ZFSet.map f x
+  · grw [ZFSet.toBVSet_mem_toBVSet_of_mem hz₁, top_himp]
+    by_cases hz₂ : z₂.1.pair z ∈ ZFSet.map f x
+    · grw [ZFSet.toBVSet_mem_toBVSet_of_mem hz₂, top_himp]
+      simp only [ZFSet.mem_map, ZFSet.pair_inj, ↓existsAndEq, SetLike.coe_mem, true_and] at hz₁ hz₂
+      simp [Subtype.val_inj.1 (hf z₁.2 z₂.2 (hz₁.trans hz₂.symm))]
+    · simp [ZFSet.toBVSet_mem_toBVSet_of_notMem hz₂]
+  · simp [ZFSet.toBVSet_mem_toBVSet_of_notMem hz₁]
+
+theorem isSurjective_toBVSet_of_surjOn {f : ZFSet → ZFSet} [ZFSet.Definable₁ f]
+    (hf : Set.SurjOn f x y) :
+    isSurjective x.toBVSet y.toBVSet (ZFSet.map f x).toBVSet = (⊤ : B) := by
+  rw [eq_top_iff, isSurjective, IsExtentional.iInf_mem_toBVSet_himp (by fun_prop)]
+  refine le_iInf fun z => ?_
+  rcases hf z.2 with ⟨z', hz', hz⟩
+  simp only [SetLike.mem_coe] at hz'
+  rw [IsExtentional.iSup_mem_toBVSet_inf (by fun_prop)]
+  apply le_iSup_of_le ⟨z', hz'⟩
+  grw [← ZFSet.toBVSet_pair, ZFSet.toBVSet_mem_toBVSet_of_mem]
+  simp [hz', hz]
+
+end ZFSet

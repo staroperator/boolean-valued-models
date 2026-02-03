@@ -3,11 +3,14 @@ import BooleanValuedModels.BooleanAlgebra.RegularOpen
 import BooleanValuedModels.DeltaSystemLemma
 import Mathlib.Data.Finmap
 
-noncomputable def Nontrivial.fst (α) [Nontrivial α] : α := Classical.choose exists_pair_ne
+noncomputable def Nontrivial.fst (α) [Nontrivial α] : α :=
+  Classical.choose exists_pair_ne
 
-noncomputable def Nontrivial.snd (α) [Nontrivial α] : α := Classical.choose (Classical.choose_spec exists_pair_ne)
+noncomputable def Nontrivial.snd (α) [Nontrivial α] : α :=
+  Classical.choose (Classical.choose_spec exists_pair_ne)
 
-theorem Nontrivial.fst_ne_snd {α} [Nontrivial α] : fst α ≠ snd α := Classical.choose_spec (Classical.choose_spec exists_pair_ne)
+theorem Nontrivial.fst_ne_snd {α} [Nontrivial α] : fst α ≠ snd α :=
+  Classical.choose_spec (Classical.choose_spec exists_pair_ne)
 
 variable {α : Type*} {β : α → Type*} {f g : Finmap β}
 
@@ -24,7 +27,8 @@ def extend [DecidableEq α] (f : Finmap β) (g : ∀ a, β a) : ∀ a, β a := f
   | some b => b
   | none => g a
 
-theorem extend_apply_of_mem_entries [DecidableEq α] {g a b} (h : ⟨a, b⟩ ∈ f.entries) : extend f g a = b := by
+theorem extend_apply_of_mem_entries [DecidableEq α] {g a b} (h : ⟨a, b⟩ ∈ f.entries) :
+    extend f g a = b := by
   simp [extend, lookup_eq_some_iff.2 h]
 
 theorem extend_apply_of_notMem [DecidableEq α] {g a} (h : a ∉ f) : extend f g a = g a := by
@@ -34,7 +38,8 @@ def restrict (f : ∀ a, β a) (s : Finset α) : Finmap β where
   entries := (s.map ⟨fun a => ⟨a, f a⟩, fun _ _ _ => by grind⟩).val
   nodupKeys := by simp [← Multiset.nodup_keys, Multiset.keys, s.nodup]
 
-theorem mem_restrict_entries {a : Sigma β} {f s} : a ∈ (restrict f s).entries ↔ a.fst ∈ s ∧ f a.fst = a.snd := by
+theorem mem_restrict_entries {a : Sigma β} {f s} :
+    a ∈ (restrict f s).entries ↔ a.fst ∈ s ∧ f a.fst = a.snd := by
   simp only [restrict, Finset.map_val, Function.Embedding.coeFn_mk, Multiset.mem_map]
   grind
 
@@ -83,7 +88,8 @@ theorem embedPi_subset_embedPi [∀ a, Nontrivial (β a)] :
       exact Nontrivial.fst_ne_snd h₁
   · exact fun hfg h hh a ha => hh _ (hfg ha)
 
-theorem embedPi_injective [∀ a, Nontrivial (β a)] : Function.Injective (embedPi : Finmap β → _) := by
+theorem embedPi_injective [∀ a, Nontrivial (β a)] :
+    Function.Injective (embedPi : Finmap β → _) := by
   intro _ _ h
   simpa [subset_antisymm_iff, embedPi_subset_embedPi, le_antisymm_iff] using h
 
@@ -165,8 +171,8 @@ instance [∀ a, Countable (β a)] : CountableChainCondition (RegularOpenSet (�
         f ∈ s.1 ∧ Set.pi I (fun a => {f a}) ⊆ s.1 := by
       intro ⟨s, hs⟩
       have hs' : s ≠ ⊥ := fun heq => h (by simpa [heq] using hs)
-      simp only [← SetLike.coe_ne_coe, RegularOpenSet.coe_bot, ne_eq, Set.eq_empty_iff_forall_notMem,
-        not_forall, not_not] at hs'
+      simp only [← SetLike.coe_ne_coe, RegularOpenSet.coe_bot, ne_eq,
+        Set.eq_empty_iff_forall_notMem, not_forall, not_not] at hs'
       rcases hs' with ⟨f, hf⟩
       have := s.isOpen
       simp only [isOpen_pi_iff, SetLike.mem_coe, isOpen_discrete, true_and] at this
@@ -177,7 +183,8 @@ instance [∀ a, Countable (β a)] : CountableChainCondition (RegularOpenSet (�
     rcases Uncountable.exists_uncountable_pairwise_inter_eq I with ⟨T, J, hT, hT'⟩
     apply not_uncountable (α := ∀ j : J, β j.1)
     rw [← Set.uncountable_univ_iff]
-    refine .mono (Set.subset_univ ((fun s (j : J) => f s j.1) '' T)) (hT.image fun s₁ hs₁ s₂ hs₂ h => ?_)
+    refine .mono (Set.subset_univ ((fun s (j : J) => f s j.1) '' T))
+      (hT.image fun s₁ hs₁ s₂ hs₂ h => ?_)
     by_contra! h'
     refine Set.eq_empty_iff_forall_notMem.1
         (RegularOpenSet.disjoint_iff.1 <| hS s₁.2 s₂.2 (Subtype.coe_ne_coe.2 h'))

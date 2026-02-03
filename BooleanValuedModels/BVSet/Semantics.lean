@@ -46,29 +46,37 @@ noncomputable instance : set.BVStructure (BVSet.{u, v} B) B where
 variable {α : Type w} {t t₁ t₂ : set.Term α} {v : α → BVSet.{u, v} B}
 
 @[simp]
-theorem bvStructureEq_def (u v : BVSet B) : BVStructure.eq set u v = u =ᴮ v := rfl
+theorem bvStructureEq_def (u v : BVSet B) : BVStructure.eq set u v = u =ᴮ v :=
+  rfl
 
 @[simp]
-theorem bvrealize_empty : (∅ : set.Term α).bvrealize v = ∅ := rfl
+theorem bvrealize_empty : (∅ : set.Term α).bvrealize v = ∅ :=
+  rfl
 
 @[simp]
-theorem bvrealize_insert : (insert t₁ t₂).bvrealize v = insert (t₁.bvrealize v) (t₂.bvrealize v) := rfl
+theorem bvrealize_insert : (insert t₁ t₂).bvrealize v = insert (t₁.bvrealize v) (t₂.bvrealize v) :=
+  rfl
 
 @[simp]
-theorem bvrealize_singleton : ({t} : set.Term α).bvrealize v = {t.bvrealize v} := rfl
+theorem bvrealize_singleton : ({t} : set.Term α).bvrealize v = {t.bvrealize v} :=
+  rfl
 
 @[simp]
-theorem bvrealize_sUnion : (⋃₀ t).bvrealize v = ⋃ᴮ (t.bvrealize v) := rfl
+theorem bvrealize_sUnion : (⋃₀ t).bvrealize v = ⋃ᴮ (t.bvrealize v) :=
+  rfl
 
 @[simp]
-theorem bvrealize_powerset : (𝒫 t).bvrealize v = 𝒫ᴮ (t.bvrealize v) := rfl
+theorem bvrealize_powerset : (𝒫 t).bvrealize v = 𝒫ᴮ (t.bvrealize v) :=
+  rfl
 
 @[simp]
-theorem bvrealize_omega : (ω : set.Term α).bvrealize v = ωᴮ := rfl
+theorem bvrealize_omega : (ω : set.Term α).bvrealize v = ωᴮ :=
+  rfl
 
 @[simp]
 theorem bvrealize_mem {n} {t₁ t₂ : set.Term (α ⊕ Fin n)} {xs : Fin n → BVSet B} :
-    (t₁ ∈' t₂).bvrealize v xs = t₁.bvrealize (Sum.elim v xs) ∈ᴮ t₂.bvrealize (Sum.elim v xs) := rfl
+    (t₁ ∈' t₂).bvrealize v xs = t₁.bvrealize (Sum.elim v xs) ∈ᴮ t₂.bvrealize (Sum.elim v xs) :=
+  rfl
 
 @[simp]
 theorem bvrealize_subset {n} {t₁ t₂ : set.Term (α ⊕ Fin n)} {xs : Fin n → BVSet B} :
@@ -82,40 +90,43 @@ theorem bvrealize_kpair {t₁ t₂ : set.Term α} :
 
 @[simp]
 theorem bvrealize_isRel {n} {a b f : set.Term (α ⊕ Fin n)} {xs : Fin n → BVSet B} :
-    (set.isRel a b f).bvrealize v xs =
-      isRel (a.bvrealize (Sum.elim v xs)) (b.bvrealize (Sum.elim v xs)) (f.bvrealize (Sum.elim v xs)) := by
-  simp [set.isRel, isRel, Sum.elim_comp_map, Fin.snoc_comp_castAdd (m := 0), Fin.snoc_comp_castAdd (m := 2)]
+    (set.isRel a b f).bvrealize v xs = isRel (a.bvrealize (Sum.elim v xs))
+      (b.bvrealize (Sum.elim v xs)) (f.bvrealize (Sum.elim v xs)) := by
+  simp [set.isRel, isRel, Sum.elim_comp_map, Fin.snoc_comp_castAdd (m := 0),
+    Fin.snoc_comp_castAdd (m := 2)]
 
 @[simp]
 theorem bvrealize_isUnique {n} {a b f : set.Term (α ⊕ Fin n)} {xs : Fin n → BVSet B} :
-    (set.isUnique a b f).bvrealize v xs =
-      isUnique (a.bvrealize (Sum.elim v xs)) (b.bvrealize (Sum.elim v xs)) (f.bvrealize (Sum.elim v xs)) := by
-  simp [set.isUnique, isUnique, Sum.elim_comp_map, Fin.snoc_comp_castAdd (m := 0), Fin.snoc_comp_castAdd (m := 2)]
+    (set.isUnique a b f).bvrealize v xs = isUnique (a.bvrealize (Sum.elim v xs))
+      (b.bvrealize (Sum.elim v xs)) (f.bvrealize (Sum.elim v xs)) := by
+  simp [set.isUnique, isUnique, Sum.elim_comp_map, Fin.snoc_comp_castAdd (m := 0),
+    Fin.snoc_comp_castAdd (m := 2)]
 
 @[simp]
 theorem bvrealize_isTotal {n} {a b f : set.Term (α ⊕ Fin n)} {xs : Fin n → BVSet B} :
-    (set.isTotal a b f).bvrealize v xs =
-      isTotal (a.bvrealize (Sum.elim v xs)) (b.bvrealize (Sum.elim v xs)) (f.bvrealize (Sum.elim v xs)) := by
+    (set.isTotal a b f).bvrealize v xs = isTotal (a.bvrealize (Sum.elim v xs))
+      (b.bvrealize (Sum.elim v xs)) (f.bvrealize (Sum.elim v xs)) := by
   simp [set.isTotal, isTotal, Sum.elim_comp_map, Fin.snoc_comp_castAdd (m := 0)]
 
 @[simp]
 theorem bvrealize_isFunc {n} {a b f : set.Term (α ⊕ Fin n)} {xs : Fin n → BVSet B} :
-    (set.isFunc a b f).bvrealize v xs
-      = isFunc (a.bvrealize (Sum.elim v xs)) (b.bvrealize (Sum.elim v xs)) (f.bvrealize (Sum.elim v xs)) := by
+    (set.isFunc a b f).bvrealize v xs = isFunc (a.bvrealize (Sum.elim v xs))
+      (b.bvrealize (Sum.elim v xs)) (f.bvrealize (Sum.elim v xs)) := by
   simp [set.isFunc, isFunc]
 
 @[simp]
 theorem bvrealize_isInjective {n} {a b f : set.Term (α ⊕ Fin n)} {xs : Fin n → BVSet B} :
-    (set.isInjective a b f).bvrealize v xs
-      = isInjective (a.bvrealize (Sum.elim v xs)) (b.bvrealize (Sum.elim v xs)) (f.bvrealize (Sum.elim v xs)) := by
-  simp [set.isInjective, isInjective, Sum.elim_comp_map, Fin.snoc_comp_castSucc, Fin.snoc_comp_castAdd (m := 0),
-    Fin.snoc_comp_castAdd (m := 2)]
+    (set.isInjective a b f).bvrealize v xs = isInjective (a.bvrealize (Sum.elim v xs))
+      (b.bvrealize (Sum.elim v xs)) (f.bvrealize (Sum.elim v xs)) := by
+  simp [set.isInjective, isInjective, Sum.elim_comp_map, Fin.snoc_comp_castSucc,
+    Fin.snoc_comp_castAdd (m := 0), Fin.snoc_comp_castAdd (m := 2)]
 
 @[simp]
 theorem bvrealize_isSurjective {n} {a b f : set.Term (α ⊕ Fin n)} {xs : Fin n → BVSet B} :
-    (set.isSurjective a b f).bvrealize v xs
-      = isSurjective (a.bvrealize (Sum.elim v xs)) (b.bvrealize (Sum.elim v xs)) (f.bvrealize (Sum.elim v xs)) := by
-  simp [set.isSurjective, isSurjective, Sum.elim_comp_map, Fin.snoc_comp_castSucc, Fin.snoc_comp_castAdd (m := 0)]
+    (set.isSurjective a b f).bvrealize v xs = isSurjective (a.bvrealize (Sum.elim v xs))
+      (b.bvrealize (Sum.elim v xs)) (f.bvrealize (Sum.elim v xs)) := by
+  simp [set.isSurjective, isSurjective, Sum.elim_comp_map, Fin.snoc_comp_castSucc,
+    Fin.snoc_comp_castAdd (m := 0)]
 
 @[simp]
 theorem bvrealize_cardLE {n} {a b : set.Term (α ⊕ Fin n)} {xs : Fin n → BVSet B} :
@@ -160,9 +171,11 @@ instance : Theory.BVModel (BVSet B) ZF where
   | _, .powerset => by
     simp [axiomOfPowerset, Sentence.bvrealize, Formula.bvrealize]
   | _, .infinity => by
-    simp +contextual [axiomOfInfinity, Sentence.bvrealize, Formula.bvrealize, empty_mem_omega, le_succ_mem_omega, omega_subset]
+    simp +contextual [axiomOfInfinity, Sentence.bvrealize, Formula.bvrealize, empty_mem_omega,
+      le_succ_mem_omega, omega_subset]
   | _, .regularity => by
-    simp [axiomOfRegularity, Sentence.bvrealize, Formula.bvrealize, ← ne_empty, ← mem_inter, regularity]
+    simp [axiomOfRegularity, Sentence.bvrealize, Formula.bvrealize, ← ne_empty, ← mem_inter,
+      regularity]
   | _, .replacement φ => by
     simp only [Sentence.bvrealize, Formula.bvrealize, axiomOfReplacement, Nat.reduceAdd,
       Fin.isValue, Function.comp_apply, Nat.succ_eq_add_one, Matrix.empty_eq,
@@ -184,7 +197,8 @@ instance : Theory.BVModel (BVSet B) ZF where
       simp [iInf_sum, iInf_fin_succ]
     -- this uses AC
     let g := fun x => Classical.choose (IsExtentional.exists_eq_iSup (hf.left x))
-    have hg : ∀ x, f x (g x) = ⨆ y, f x y := fun x => Classical.choose_spec (IsExtentional.exists_eq_iSup (hf.left x))
+    have hg : ∀ x, f x (g x) = ⨆ y, f x y := fun x =>
+      Classical.choose_spec (IsExtentional.exists_eq_iSup (hf.left x))
     apply le_iSup_of_le (a.replace g)
     refine le_iInf fun y => ?_
     rw [mem_replace', bihimp_def, IsExtentional.iSup_mem_inf (hf.right y)]

@@ -73,7 +73,8 @@ theorem isOrdinal_inf_mem_inf_mem_inf_mem_le {x y z} :
       grw [inf_le_right]
       rw [inf_right_comm (y ∈ᴮ x), mem_cycle₃]
       exact bot_le
-    · rw [inf_assoc (isOrdinal u ⊓ x ∈ᴮ u), inf_assoc (isOrdinal u ⊓ x ∈ᴮ u), inf_assoc (y ∈ᴮ x), inf_comm (z ∈ᴮ y)]
+    · rw [inf_assoc (isOrdinal u ⊓ x ∈ᴮ u), inf_assoc (isOrdinal u ⊓ x ∈ᴮ u), inf_assoc (y ∈ᴮ x),
+        inf_comm (z ∈ᴮ y)]
       grw [inf_le_right, mem_congr_left', mem_cycle₂, bot_le]
     · grw [inf_le_right]
 
@@ -155,9 +156,9 @@ theorem isOrdinal_inf_subset_le_mem_sup_eq :
             simp
           · grw [inf_le_left (b := _ =ᴮ ∅), inf_assoc]
             simp
-    · grw [inf_le_right (a := isOrdinal u), inf_le_right (a := isOrdinal v), inf_le_right (a := v ⊆ᴮ u),
-        inf_le_right (a := v ≠ᴮ u), inf_le_left (b := _ᶜ), inf_le_left (b := _ =ᴮ ∅),
-        inf_comm, mem_congr_left]
+    · grw [inf_le_right (a := isOrdinal u), inf_le_right (a := isOrdinal v),
+        inf_le_right (a := v ⊆ᴮ u), inf_le_right (a := v ≠ᴮ u), inf_le_left (b := _ᶜ),
+        inf_le_left (b := _ =ᴮ ∅), inf_comm, mem_congr_left]
 
 theorem isOrdinal_le_subset_sup_mem :
     isOrdinal u ⊓ isOrdinal v ≤ u ⊆ᴮ v ⊔ v ∈ᴮ u := by
@@ -212,7 +213,8 @@ theorem isTransitive_toBVSet_of_isTransitive {x : ZFSet.{v}} (hx : x.IsTransitiv
 
 theorem isOrdinal_toBVSet_of_isOrdinal {x : ZFSet.{v}} (hx : x.IsOrdinal) :
     isOrdinal x.toBVSet = (⊤ : B) := by
-  simp only [isOrdinal, ZFSet.isTransitive_toBVSet_of_isTransitive hx.isTransitive, top_inf_eq, eq_top_iff]
+  simp only [isOrdinal, ZFSet.isTransitive_toBVSet_of_isTransitive hx.isTransitive, top_inf_eq,
+    eq_top_iff]
   rw [IsExtentional.iInf_mem_toBVSet_himp (by fun_prop), le_iInf_iff]
   intro ⟨y, hy⟩
   simp only
@@ -239,20 +241,21 @@ theorem isOrdinal_eq_iSup_eq [Small.{v} B] {u : BVSet.{u, v} B} :
   apply le_antisymm
   · let f : u.Index → Set Ordinal := fun i => {o : Ordinal | o.toZFSet.toBVSet =ᴮ (i : BVSet B) ≠ ⊥}
     haveI : ∀ i, Small.{v} (f i) := fun i =>
-      small_of_injective (f := fun ⟨o, _⟩ => o.toZFSet.toBVSet =ᴮ (i : BVSet B)) fun ⟨o₁, ho₁⟩ ⟨o₂, ho₂⟩ h => by
-        simp only [ne_eq, Set.mem_setOf_eq, f, ← bot_lt_iff_ne_bot] at ho₁ ho₂
-        simp only at h
-        simp only [Subtype.mk.injEq]
-        by_contra h'
-        apply ho₁.not_ge
-        rw [← inf_idem (_ =ᴮ _)]
-        conv_lhs => arg 2; rw [h, eq_symm]
-        grw [eq_trans, ZFSet.toBVSet_eq_toBVSet_of_ne (B := B) (Ordinal.toZFSet_injective.ne h')]
+      small_of_injective (f := fun ⟨o, _⟩ => o.toZFSet.toBVSet =ᴮ (i : BVSet B))
+        fun ⟨o₁, ho₁⟩ ⟨o₂, ho₂⟩ h => by
+          simp only [ne_eq, Set.mem_setOf_eq, f, ← bot_lt_iff_ne_bot] at ho₁ ho₂
+          simp only at h
+          simp only [Subtype.mk.injEq]
+          by_contra h'
+          apply ho₁.not_ge
+          rw [← inf_idem (_ =ᴮ _)]
+          conv_lhs => arg 2; rw [h, eq_symm]
+          grw [eq_trans, ZFSet.toBVSet_eq_toBVSet_of_ne (B := B) (Ordinal.toZFSet_injective.ne h')]
     let o := Order.succ (⨆ i, sSup (f i))
     rw [← inf_top_eq (isOrdinal u), ← ZFSet.isOrdinal_toBVSet]
     refine isOrdinal_trichotomous.trans (sup_le (sup_le ?_ ?_) ?_)
-    · rw [ZFSet.mem_toBVSet,
-        ← (Equiv.subtypeEquivRight (p := (· ∈ o.toZFSet)) (Set.ext_iff.1 Ordinal.coe_toZFSet)).symm.iSup_comp]
+    · rw [ZFSet.mem_toBVSet, ← (Equiv.subtypeEquivRight (p := (· ∈ o.toZFSet))
+        (Set.ext_iff.1 Ordinal.coe_toZFSet)).symm.iSup_comp]
       apply iSup_le
       simp only [Equiv.subtypeEquivRight_symm_apply_coe, Subtype.forall, Set.mem_image, Set.mem_Iio,
         forall_exists_index, and_imp, forall_apply_eq_imp_iff₂]
@@ -297,7 +300,8 @@ theorem natCast_eq_natCast {n m : ℕ} :
     (n : BVSet B) =ᴮ m = if n = m then ⊤ else ⊥ := by
   split_ifs with h
   · simp [h]
-  · rw [natCast_def, natCast_def, ZFSet.toBVSet_eq_toBVSet_of_ne (by simpa [toZFSet_injective.eq_iff])]
+  · rw [natCast_def, natCast_def,
+      ZFSet.toBVSet_eq_toBVSet_of_ne (by simpa [toZFSet_injective.eq_iff])]
 
 def omega : BVSet B := (ω).toZFSet.toBVSet
 
@@ -319,8 +323,8 @@ theorem le_succ_mem_omega {u : BVSet B} : u ∈ᴮ ωᴮ ≤ insert u u ∈ᴮ �
   · rw [← toZFSet_succ, toZFSet_mem_toZFSet_iff, ← add_one_eq_succ, ← Nat.cast_succ, lt_omega0]
     exact ⟨_, rfl⟩
   · simp only
-    grw [← IsExtentional.eq_inf_le' (fun y => insert y y =ᴮ ZFSet.toBVSet _) (by fun_prop) (n : Ordinal).toZFSet.toBVSet,
-      ← ZFSet.toBVSet_insert]
+    grw [← IsExtentional.eq_inf_le' (fun y => insert y y =ᴮ ZFSet.toBVSet _) (by fun_prop)
+      (n : Ordinal).toZFSet.toBVSet, ← ZFSet.toBVSet_insert]
     simp
 
 theorem omega_subset (u : BVSet B) : ∅ ∈ᴮ u ⊓ ⨅ x, x ∈ᴮ u ⇨ insert x x ∈ᴮ u ≤ ωᴮ ⊆ᴮ u := by
