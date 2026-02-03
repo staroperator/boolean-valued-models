@@ -1,5 +1,4 @@
 import BooleanValuedModels.BooleanAlgebra.CountableChainCondition
-import Mathlib.Order.CompleteBooleanAlgebra
 import Mathlib.Topology.Bases
 import Mathlib.Topology.Clopen
 
@@ -162,6 +161,8 @@ instance : CompleteBooleanAlgebra (RegularOpenSet X) where
     ((sInf S : RegularOpenSet X) : Set X) = interior (closure (⋂ s ∈ S, s)) := rfl
 @[simp] theorem coe_iInf {ι : Sort*} {s : ι → RegularOpenSet X} :
     ((⨅ i, s i : RegularOpenSet X) : Set X) = interior (closure (⋂ i, s i)) := by simp [← sInf_range]
+
+instance [Nonempty X] : Nontrivial (RegularOpenSet X) := ⟨⊥, ⊤, SetLike.coe_ne_coe.1 Set.empty_ne_univ⟩
 
 end RegularOpenSet
 

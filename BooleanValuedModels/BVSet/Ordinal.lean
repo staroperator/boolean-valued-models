@@ -323,6 +323,24 @@ theorem le_succ_mem_omega {u : BVSet B} : u ∈ᴮ ωᴮ ≤ insert u u ∈ᴮ �
       ← ZFSet.toBVSet_insert]
     simp
 
+theorem omega_subset (u : BVSet B) : ∅ ∈ᴮ u ⊓ ⨅ x, x ∈ᴮ u ⇨ insert x x ∈ᴮ u ≤ ωᴮ ⊆ᴮ u := by
+  rw [omega_def, ZFSet.toBVSet_subset]
+  refine le_iInf fun ⟨i, hi⟩ => ?_
+  simp only [mem_toZFSet_iff, lt_omega0, ↓existsAndEq, true_and] at hi
+  rcases hi with ⟨n, rfl⟩
+  simp only
+  clear hi
+  induction n with
+  | zero =>
+    simp only [Nat.cast_zero, toZFSet_zero]
+    grw [toBVSet_empty, inf_le_left]
+  | succ n ih =>
+    simp only [Nat.cast_add, Nat.cast_one, add_one_eq_succ, toZFSet_succ]
+    grw [toBVSet_insert]
+    apply le_of_inf_le
+    · exact ih
+    · grw [inf_le_right (a := ∅ ∈ᴮ u), iInf_le _ (n : Ordinal).toZFSet.toBVSet, himp_inf_le]
+
 theorem natCast_mem_omega {n : ℕ} : n ∈ᴮ ωᴮ = (⊤ : B) := by
   rw [natCast_def, omega_def, toBVSet_mem_toBVSet_of_mem (by simp [Ordinal.lt_omega0])]
 

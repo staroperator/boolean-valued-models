@@ -88,3 +88,13 @@ theorem iInf_iSup_eq_of_finite {α ι} {κ : ι → Sort*} [Order.Frame α] [Fin
     haveI : IsEmpty (∀ a, κ a) := by simpa
     rcases h with ⟨a, h⟩
     grw [iSup_of_empty, eq_bot_iff, iInf_le _ a, iSup_of_empty]
+
+theorem iSup_fin_succ {α n} {f : Fin (n + 1) → α} [CompleteLattice α] :
+    ⨆ x, f x = f 0 ⊔ ⨆ x : Fin n, f x.succ :=
+  le_antisymm (iSup_le (Fin.cases le_sup_left (fun i => le_sup_of_le_right <| le_iSup_of_le i le_rfl)))
+    (sup_le (le_iSup f 0) (iSup_le fun i => le_iSup_of_le i.succ le_rfl))
+
+theorem iInf_fin_succ {α n} {f : Fin (n + 1) → α} [CompleteLattice α] :
+    ⨅ x, f x = f 0 ⊓ ⨅ x : Fin n, f x.succ :=
+  le_antisymm (le_inf (iInf_le f 0) (le_iInf fun i => iInf_le_of_le i.succ le_rfl))
+    (le_iInf (Fin.cases inf_le_left (fun i => inf_le_of_right_le <| iInf_le_of_le i le_rfl)))
