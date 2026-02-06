@@ -429,7 +429,7 @@ theorem equiv_def : u ≈ v ↔ u =ᴮ v = ⊤ := Iff.rfl
 
 @[refl] theorem equiv_refl (u : BVSet B) : u ≈ u := IsEquiv.toIsPreorder.refl _
 
-@[symm] theorem equiv_symm : u ≈ v → v ≈ u := IsEquiv.toIsSymm.symm _ _
+@[symm] theorem equiv_symm : u ≈ v → v ≈ u := IsEquiv.toSymm.symm _ _
 
 @[trans] theorem equiv_trans : u ≈ v → v ≈ w → u ≈ w := IsEquiv.toIsPreorder.trans _ _ _
 

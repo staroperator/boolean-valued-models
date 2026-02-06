@@ -1,8 +1,8 @@
 import Mathlib.Data.Set.Finite.Basic
 import Mathlib.Order.CompleteBooleanAlgebra
 
-@[gcongr] theorem compl_congr {α} [HasCompl α] {a b : α} (h : a = b) : aᶜ = bᶜ :=
-  congr_arg HasCompl.compl h
+@[gcongr] theorem compl_congr {α} [Compl α] {a b : α} (h : a = b) : aᶜ = bᶜ :=
+  congr_arg Compl.compl h
 
 @[gcongr] theorem sup_congr {α} [Max α] {a b c d : α} (h₁ : a = c) (h₂ : b = d) : a ⊔ b = c ⊔ d :=
   congr_arg₂ Max.max h₁ h₂
@@ -12,8 +12,6 @@ import Mathlib.Order.CompleteBooleanAlgebra
 
 @[gcongr] theorem himp_congr {α} [HImp α] {a b c d : α} (h₁ : a = c) (h₂ : b = d) : a ⇨ b = c ⇨ d :=
   congr_arg₂ HImp.himp h₁ h₂
-
-attribute [gcongr] himp_le_himp
 
 theorem compl_himp_eq {α} [BooleanAlgebra α] {a b : α} :
     aᶜ ⇨ b = a ⊔ b := by
@@ -41,16 +39,6 @@ theorem le_of_inf_le_of_compl_le {α} [BooleanAlgebra α] {a : α} (b) {c} :
     a ⊓ b ≤ c → a ⊓ bᶜ ≤ c → a ≤ c := by
   intro h₁ h₂
   grw [← inf_top_eq a, ← sup_compl_eq_top (x := b), inf_sup_left, h₁, h₂, sup_idem]
-
-theorem iSup_himp_eq {α ι} [Order.Frame α] {f : ι → α} {a} :
-    (⨆ x, f x) ⇨ a = ⨅ x, f x ⇨ a := by
-  refine eq_of_forall_le_iff fun b => ?_
-  simp [inf_iSup_eq]
-
-theorem himp_iInf_eq {α ι} [Order.Frame α] {f : ι → α} {a} :
-    a ⇨ (⨅ x, f x) = ⨅ x, a ⇨ f x := by
-  refine eq_of_forall_le_iff fun b => ?_
-  simp
 
 lemma biSup_lt_eq_biSup_lt_biSup_le {α ι} [CompleteLattice α] [Preorder ι] {f : ι → α} {i} :
     ⨆ j < i, f j = ⨆ j < i, ⨆ k ≤ j, f k :=

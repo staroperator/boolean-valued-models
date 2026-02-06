@@ -1,13 +1,7 @@
 import BooleanValuedModels.BVSet.Relations
 import BooleanValuedModels.BooleanAlgebra.CountableChainCondition
 import BooleanValuedModels.DeltaSystemLemma
-import Mathlib.SetTheory.ZFC.Cardinal
 import Mathlib.SetTheory.ZFC.Ordinal
-
-@[simp]
-theorem Ordinal.card_toZFSet (o : Ordinal) : o.toZFSet.card = o.card := by
-  simpa [← coe_toZFSet, ZFSet.cardinalMk_coe_sort, mk_Iio_ordinal, ← lift_card] using
-    Cardinal.mk_image_eq (s := Set.Iio o) toZFSet_injective
 
 universe u v
 

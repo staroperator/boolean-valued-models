@@ -10,33 +10,23 @@ variable {α : Ordinal.{u}} {n : ℕ} {o : (ω_ α).ToType}
 local notation "ℙ" => Finmap' (ℕ × Ordinal.ToType (ω_ α)) Bool
 local notation "𝔹" => RegularOpenSet (ℕ × Ordinal.ToType (ω_ α) → Bool)
 
-def cylinder (o : (ω_ α).ToType) (n : ℕ) : Set (ℕ × Ordinal.ToType (ω_ α) → Bool) :=
-  {f | f (n, o) = true}
-
-theorem isClopen_cyliner : IsClopen (cylinder o n) := by
-  constructor
-  · simp only [← isOpen_compl_iff, isOpen_pi_iff, Set.mem_compl_iff, cylinder, Set.mem_setOf_eq,
-      Bool.not_eq_true, isOpen_discrete, true_and]
-    intro f hf
-    exact ⟨{(n, o)}, fun _ => {false}, by grind⟩
-  · simp only [isOpen_pi_iff, cylinder, Set.mem_setOf_eq, isOpen_discrete, true_and]
-    intro f hf
-    exact ⟨{(n, o)}, fun _ => {true}, by grind⟩
-
 def cohenRealVal (o : (ω_ α).ToType) (n : ℕ) : 𝔹 :=
-  ⟨cylinder o n, isRegularOpen_of_isClopen isClopen_cyliner⟩
+  ⟨PiDiscrete.basicOpen {(n, o)} fun _ => true, PiDiscrete.isRegularOpen_basicOpen⟩
 
 @[simp]
-theorem coe_cohenRealVal : (cohenRealVal o n : Set _) = cylinder o n := rfl
+theorem coe_cohenRealVal :
+    (cohenRealVal o n : Set _) = PiDiscrete.basicOpen {(n, o)} fun _ => true := rfl
 
 @[simp]
-theorem mem_cohenRealVal {f} : f ∈ cohenRealVal o n ↔ f (n, o) = true := Iff.rfl
+theorem mem_cohenRealVal {f} : f ∈ cohenRealVal o n ↔ f (n, o) = true := by
+  rw [← SetLike.mem_coe, coe_cohenRealVal]
+  grind
 
 @[simp]
 theorem mem_compl_cohenRealVal {f} : f ∈ (cohenRealVal o n)ᶜ ↔ f (n, o) = false := by
   rw [← SetLike.mem_coe, RegularOpenSet.coe_compl, coe_cohenRealVal,
-    isClopen_cyliner.compl.isOpen.interior_eq]
-  simp [cylinder]
+    PiDiscrete.isClopen_basicOpen.compl.isOpen.interior_eq]
+  grind
 
 noncomputable def cohenReal (o : Ordinal.ToType (ω_ α)) : BVSet.{u, u} 𝔹 :=
   ⟨ULift ℕ, fun ⟨n⟩ => n, fun ⟨n⟩ => cohenRealVal o n⟩
