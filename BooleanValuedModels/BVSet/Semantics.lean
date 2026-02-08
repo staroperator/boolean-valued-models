@@ -1,9 +1,14 @@
-import BooleanValuedModels.BVSet.Cardinal
-import BooleanValuedModels.BVSet.Choice
-import BooleanValuedModels.BVSet.Ordinal
-import BooleanValuedModels.ModelTheory.BVSemantics
+module
+
+public import BooleanValuedModels.BVSet.Cardinal
+public import BooleanValuedModels.BVSet.Choice
+public import BooleanValuedModels.BVSet.Ordinal
+public import BooleanValuedModels.ModelTheory.BVSemantics
+public import BooleanValuedModels.ZFC.Syntax
+
 import BooleanValuedModels.ModelTheory.FinLemmas
-import BooleanValuedModels.ZFC.Syntax
+
+@[expose] public section
 
 variable {B : Type u} [CompleteBooleanAlgebra B] [Small.{v} B]
 
@@ -20,11 +25,11 @@ noncomputable instance : set.BVStructure (BVSet.{u, v} B) B where
   | .omega, _ => ωᴮ
   relMap
   | .mem, v => v 0 ∈ᴮ v 1
-  eq u v := u =ᴮ v
-  eq_refl := eq_refl
-  eq_symm := eq_symm 
-  eq_trans := eq_trans
-  eq_funMap
+  beq u v := u =ᴮ v
+  beq_refl := beq_refl
+  beq_symm := beq_symm 
+  beq_trans := beq_trans
+  beq_funMap
   | .empty, _, _ => by simp
   | .insert, _, _ => by
     have : IsExtentionalFun₂ (insert : BVSet B → BVSet B → BVSet B) := by
@@ -37,7 +42,7 @@ noncomputable instance : set.BVStructure (BVSet.{u, v} B) B where
     have : IsExtentionalFun (𝒫ᴮ · : BVSet B → BVSet B) := by fun_prop
     exact (this _ _).trans' <| iInf_le _ 0
   | .omega, _, _ => by simp
-  eq_relMap
+  beq_relMap
   | .mem, _, _ => by
     have : IsExtentional₂ (· ∈ᴮ · : BVSet B → BVSet B → B) := by
       apply IsExtentional₂.of_isExtentional <;> fun_prop
@@ -46,7 +51,7 @@ noncomputable instance : set.BVStructure (BVSet.{u, v} B) B where
 variable {α : Type w} {t t₁ t₂ : set.Term α} {v : α → BVSet.{u, v} B}
 
 @[simp]
-theorem bvStructureEq_def (u v : BVSet B) : BVStructure.eq set u v = u =ᴮ v :=
+theorem bvStructureEq_def (u v : BVSet B) : BVStructure.beq set u v = u =ᴮ v :=
   rfl
 
 @[simp]
@@ -81,7 +86,7 @@ theorem bvrealize_mem {n} {t₁ t₂ : set.Term (α ⊕ Fin n)} {xs : Fin n → 
 @[simp]
 theorem bvrealize_subset {n} {t₁ t₂ : set.Term (α ⊕ Fin n)} {xs : Fin n → BVSet B} :
     (t₁ ⊆' t₂).bvrealize v xs = t₁.bvrealize (Sum.elim v xs) ⊆ᴮ t₂.bvrealize (Sum.elim v xs) := by
-  simp [set.subset, Sum.elim_comp_map, ← subset_def']
+  simp [set.subset, Sum.elim_comp_map, ← bsubset_def']
 
 @[simp]
 theorem bvrealize_kpair {t₁ t₂ : set.Term α} :
@@ -144,8 +149,8 @@ instance : BVStructure.IsFull set (BVSet B) B where
   exists_eq_iSup φ v xs := by
     apply IsExtentional.exists_eq_iSup
     intro u v
-    convert φ.eq_inf_bvrealize_le_bvrealize
-    simp only [bvStructureEq_def, eq_refl, iInf_top, le_top, inf_of_le_right]
+    convert φ.beq_inf_bvrealize_le_bvrealize
+    simp only [bvStructureEq_def, beq_refl, iInf_top, le_top, inf_of_le_right]
     refine le_antisymm (le_iInf fun i => ?_) (iInf_le_of_le (Fin.last _) ?_)
     · cases i using Fin.lastCases with simp
     · simp
@@ -160,7 +165,7 @@ instance : Theory.BVModel (BVSet B) ZF where
       Fin.snoc_apply_one', BoundedFormula.bvrealize_bdEqual, bvStructureEq_def, iInf_eq_top,
       himp_eq_top_iff]
     intro u v
-    simp_rw [bihimp_def, iInf_inf_eq, ← subset_def', inf_comm, ← eq_def]
+    simp_rw [bihimp_def, iInf_inf_eq, ← bsubset_def', inf_comm, ← beq_def]
     rfl
   | _, .empty => by
     simp [axiomOfEmpty, Sentence.bvrealize, Formula.bvrealize]
@@ -171,10 +176,10 @@ instance : Theory.BVModel (BVSet B) ZF where
   | _, .powerset => by
     simp [axiomOfPowerset, Sentence.bvrealize, Formula.bvrealize]
   | _, .infinity => by
-    simp +contextual [axiomOfInfinity, Sentence.bvrealize, Formula.bvrealize, empty_mem_omega,
-      le_succ_mem_omega, omega_subset]
+    simp +contextual [axiomOfInfinity, Sentence.bvrealize, Formula.bvrealize, empty_bmem_omega,
+      le_succ_bmem_omega, omega_bsubset]
   | _, .regularity => by
-    simp [axiomOfRegularity, Sentence.bvrealize, Formula.bvrealize, ← ne_empty, ← mem_inter,
+    simp [axiomOfRegularity, Sentence.bvrealize, Formula.bvrealize, ← bne_empty, ← bmem_inter,
       regularity]
   | _, .replacement φ => by
     simp only [Sentence.bvrealize, Formula.bvrealize, axiomOfReplacement, Nat.reduceAdd,
@@ -193,7 +198,7 @@ instance : Theory.BVModel (BVSet B) ZF where
       ⨆ b, ⨅ y, bihimp (y ∈ᴮ b) (⨆ x, x ∈ᴮ a ⊓ f x y)
     have hf : IsExtentional₂ f := by
       intro x₁ x₂ y₁ y₂
-      convert BoundedFormula.eq_inf_bvrealize_le_bvrealize using 2
+      convert BoundedFormula.beq_inf_bvrealize_le_bvrealize using 2
       simp [iInf_sum, iInf_fin_succ]
     -- this uses AC
     let g := fun x => Classical.choose (IsExtentional.exists_eq_iSup (hf.left x))
@@ -201,20 +206,20 @@ instance : Theory.BVModel (BVSet B) ZF where
       Classical.choose_spec (IsExtentional.exists_eq_iSup (hf.left x))
     apply le_iSup_of_le (a.replace g)
     refine le_iInf fun y => ?_
-    rw [mem_replace', bihimp_def, IsExtentional.iSup_mem_inf (hf.right y)]
+    rw [bmem_replace, bihimp_def, IsExtentional.iSup_bmem_inf (hf.right y)]
     apply le_inf
     · rw [le_himp_iff, inf_iSup_eq]
       refine iSup_le fun i => le_iSup_of_le i (le_inf ?_ ?_)
       · grw [inf_le_right, inf_le_left]
-      · grw [iInf_le _ (i : BVSet B), ← inf_assoc, val_le_dom_mem, himp_inf_le, ← hg, iInf_le _ y,
+      · grw [iInf_le _ (i : BVSet B), ← inf_assoc, val_le_bmem, himp_inf_le, ← hg, iInf_le _ y,
           iInf_le _ (g i), inf_assoc, himp_inf_le, inf_himp_le]
     · rw [le_himp_iff, inf_iSup_eq]
       refine iSup_le fun i => le_iSup_of_le i (le_inf ?_ ?_)
       · grw [inf_le_right, inf_le_left]
       · rw [← inf_assoc]
-        apply IsExtentional.inf_eq_le_of_le (by fun_prop) (hf.left _) y
+        apply IsExtentional.inf_beq_le_of_le (by fun_prop) (hf.left _) y
         rw [hg]
-        grw [iInf_le _ (i : BVSet B), val_le_dom_mem, himp_inf_le, inf_le_left]
+        grw [iInf_le _ (i : BVSet B), val_le_bmem, himp_inf_le, inf_le_left]
 
 instance : Theory.BVModel (BVSet B) ZFC where
   bvrealize_of_mem φ hφ := by
@@ -222,3 +227,5 @@ instance : Theory.BVModel (BVSet B) ZFC where
     rcases hφ with rfl | hφ
     · simp [axiomOfChoice, Sentence.bvrealize, Formula.bvrealize, exists_choice_func]
     · exact Theory.BVModel.bvrealize_of_mem φ hφ
+
+end BVSet

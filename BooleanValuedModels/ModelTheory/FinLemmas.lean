@@ -1,5 +1,9 @@
-import Mathlib.Data.Fin.Tuple.Basic
-import Mathlib.Data.Fin.VecNotation
+module
+
+public import Mathlib.Data.Fin.Tuple.Basic
+public import Mathlib.Data.Fin.VecNotation
+
+public section
 
 @[simp]
 theorem Fin.snoc_apply_zero' {α : Fin 1 → Sort*} {p : ∀ i : Fin 0, α i.castSucc} {x} :

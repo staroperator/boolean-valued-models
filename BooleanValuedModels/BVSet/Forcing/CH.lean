@@ -1,5 +1,9 @@
-import BooleanValuedModels.BooleanAlgebra.FinMap
-import BooleanValuedModels.BVSet.Semantics
+module
+
+public import BooleanValuedModels.BooleanAlgebra.FinMap
+public import BooleanValuedModels.BVSet.Semantics
+
+@[expose] public section
 
 namespace BVSet.Cohen
 
@@ -29,13 +33,13 @@ theorem mem_compl_cohenRealVal {f} : f ∈ (cohenRealVal o n)ᶜ ↔ f (n, o) = 
   grind
 
 noncomputable def cohenReal (o : Ordinal.ToType (ω_ α)) : BVSet.{u, u} 𝔹 :=
-  ⟨ULift ℕ, fun ⟨n⟩ => n, fun ⟨n⟩ => cohenRealVal o n⟩
+  mkI ℕ (fun n => n) fun n => cohenRealVal o n
 
 theorem forces_mem_cohenReal {p : ℙ} :
     p ⊩ n ∈ᴮ cohenReal o ↔ p.lookup (n, o) = true := by
-  simp only [cohenReal, mem_def, Index_mk, val_mk, dom_mk,
-    natCast_eq_natCast, apply_ite, le_top, inf_of_le_left, bot_le, inf_of_le_right, iSup_ite,
-    iSup_ulift, iSup_iSup_eq_right, iSup_bot, sup_of_le_left, Finmap.forces_iff, mem_cohenRealVal]
+  simp only [cohenReal, bmem_mkI, natCast_beq_natCast, apply_ite, le_top, inf_of_le_left, bot_le,
+    inf_of_le_right, iSup_ite, iSup_iSup_eq_right, iSup_bot, sup_of_le_left, Finmap.forces_iff,
+    mem_cohenRealVal]
   constructor
   · intro h
     specialize h (p.extend fun _ => false) fun a ha => by rw [Finmap.extend_apply_of_mem_entries ha]
@@ -53,9 +57,8 @@ theorem forces_mem_cohenReal {p : ℙ} :
 
 theorem forces_notMem_cohenReal {p : ℙ} :
     p ⊩ n ∉ᴮ cohenReal o ↔ p.lookup (n, o) = false := by
-  simp only [cohenReal, mem_def, Index_mk, val_mk, dom_mk,
-    natCast_eq_natCast, apply_ite, le_top, inf_of_le_left, bot_le, inf_of_le_right, iSup_ite,
-    iSup_ulift, iSup_iSup_eq_right, iSup_bot, sup_of_le_left, Finmap.forces_iff,
+  simp only [cohenReal, bmem_mkI, natCast_beq_natCast, apply_ite, le_top, inf_of_le_left, bot_le,
+    inf_of_le_right, iSup_ite, iSup_iSup_eq_right, iSup_bot, sup_of_le_left, Finmap.forces_iff,
     mem_compl_cohenRealVal]
   constructor
   · intro h
@@ -85,7 +88,7 @@ theorem cohenReal_ne_cohenReal {o₁ o₂ : Ordinal.ToType (ω_ α)} (h : o₁ �
   refine ⟨hp.weaken ?_, ?_⟩
   · apply (Finmap.insert_le_of_notMem (by simp [ne_comm.1 h, hn o₂])).trans
     exact Finmap.insert_le_of_notMem (by simp [hn o₁])
-  · grw [eq_def, compl_inf, ← le_sup_left, subset_def', compl_iInf,
+  · grw [beq_def, compl_inf, ← le_sup_left, bsubset_def', compl_iInf,
       ← le_iSup _ (n : BVSet 𝔹), compl_himp, sdiff_eq, forces_inf]
     constructor
     · rw [forces_mem_cohenReal, Finmap.lookup_insert_of_ne _ (by simpa), Finmap.lookup_insert]
@@ -93,9 +96,7 @@ theorem cohenReal_ne_cohenReal {o₁ o₂ : Ordinal.ToType (ω_ α)} (h : o₁ �
 
 theorem cohenReal_mem_powerset_omega :
     cohenReal o ∈ᴮ 𝒫ᴮ ωᴮ = (⊤ : 𝔹) := by
-  rw [eq_top_iff, mem_powerset, subset_def]
-  refine le_iInf fun ⟨n⟩ => ?_
-  simp [cohenReal, natCast_mem_omega]
+  simp [cohenReal, mkI_bsubset, natCast_bmem_omega]
 
 theorem cardLE_powerset_omega :
     (ω_ α).toZFSet.toBVSet ≲ᴮ 𝒫ᴮ ωᴮ = (⊤ : 𝔹) := by
@@ -106,76 +107,75 @@ theorem cardLE_powerset_omega :
     (prod (ω_ α).toZFSet.toBVSet (𝒫ᴮ ωᴮ)).sep fun x =>
       ⨆ (o : (ω_ α).ToType), x =ᴮ kpair o.toOrd.1.toZFSet.toBVSet (cohenReal o)
   refine le_iSup_of_le f (le_inf (le_inf (le_inf ?_ ?_) ?_) ?_)
-  · rw [isRel_eq_subset_prod, sep_subset (by fun_prop)]
-  · rw [isTotal, IsExtentional.iInf_mem_toBVSet_himp (by fun_prop)]
+  · rw [isRel_eq_bsubset_prod, sep_bsubset (by fun_prop)]
+  · rw [isTotal, IsExtentional.iInf_bmem_toBVSet_himp (by fun_prop)]
     refine le_iInf fun ⟨x, hx⟩ => ?_
     simp only [mem_toZFSet_iff] at hx
     rcases hx with ⟨o, ho, rfl⟩
     refine le_iSup_of_le (cohenReal (Ordinal.ToType.mk ⟨o, ho⟩)) (le_inf ?_ ?_)
     · rw [cohenReal_mem_powerset_omega]
-    · rw [mem_sep (by fun_prop)]
+    · rw [bmem_sep' (by fun_prop)]
       refine le_inf ?_ (le_iSup_of_le (Ordinal.ToType.mk ⟨o, ho⟩) ?_)
-      · grw [← le_kpair_mem_prod,
-          ZFSet.toBVSet_mem_toBVSet_of_mem (by simpa),
+      · grw [← le_kpair_bmem_prod, ZFSet.toBVSet_bmem_toBVSet_of_mem (by simpa),
           cohenReal_mem_powerset_omega, top_inf_eq]
       · simp
-  · rw [isUnique, IsExtentional.iInf_mem_toBVSet_himp (by fun_prop)]
+  · rw [isUnique, IsExtentional.iInf_bmem_toBVSet_himp (by fun_prop)]
     refine le_iInf fun ⟨x, hx⟩ => ?_
     simp only [mem_toZFSet_iff] at hx
     rcases hx with ⟨o, ho, rfl⟩
     refine le_iInf fun y₁ => ?_
     grw [← le_himp]
     refine le_iInf fun y₂ => ?_
-    grw [← le_himp, le_himp_iff, top_inf_eq, mem_sep (by fun_prop),
+    grw [← le_himp, le_himp_iff, top_inf_eq, bmem_sep' (by fun_prop),
       inf_le_right (a := _ ∈ᴮ prod _ _)]
     refine iSup_le fun o₁ => ?_
-    rw [kpair_eq_kpair]
+    rw [kpair_beq_kpair]
     by_cases ho₁ : o₁ = Ordinal.ToType.mk ⟨o, ho⟩
     · subst ho₁
-      simp only [OrderIso.symm_apply_apply, eq_refl, le_top, inf_of_le_right, le_himp_iff]
-      grw [mem_sep (by fun_prop), inf_le_right (a := _ ∈ᴮ prod _ _), inf_iSup_eq]
+      simp only [OrderIso.symm_apply_apply, beq_refl, le_top, inf_of_le_right, le_himp_iff]
+      grw [bmem_sep' (by fun_prop), inf_le_right (a := _ ∈ᴮ prod _ _), inf_iSup_eq]
       refine iSup_le fun o₂ => ?_
-      rw [kpair_eq_kpair]
+      rw [kpair_beq_kpair]
       by_cases ho₂ : o₂ = Ordinal.ToType.mk ⟨o, ho⟩
       · subst ho₂
-        simp only [OrderIso.symm_apply_apply, eq_refl, le_top, inf_of_le_right]
-        grw [eq_symm y₂, eq_trans]
-      · rw [ZFSet.toBVSet_eq_toBVSet_of_ne fun ne => by
+        simp only [OrderIso.symm_apply_apply, beq_refl, le_top, inf_of_le_right]
+        grw [beq_symm y₂, beq_trans]
+      · rw [ZFSet.toBVSet_beq_toBVSet_of_ne fun ne => by
           rw [toZFSet_injective.eq_iff] at ne; simp [ne] at ho₂]
         simp
-    · rw [ZFSet.toBVSet_eq_toBVSet_of_ne fun ne => by
+    · rw [ZFSet.toBVSet_beq_toBVSet_of_ne fun ne => by
         rw [toZFSet_injective.eq_iff] at ne; simp [ne] at ho₁]
       simp
-  · rw [isInjective, IsExtentional.iInf_mem_toBVSet_himp (by fun_prop)]
+  · rw [isInjective, IsExtentional.iInf_bmem_toBVSet_himp (by fun_prop)]
     refine le_iInf fun ⟨x₁, hx₁⟩ => ?_
     simp only [mem_toZFSet_iff] at hx₁
     rcases hx₁ with ⟨o₁, ho₁, rfl⟩
-    rw [IsExtentional.iInf_mem_toBVSet_himp (by fun_prop)]
+    rw [IsExtentional.iInf_bmem_toBVSet_himp (by fun_prop)]
     refine le_iInf fun ⟨x₂, hx₂⟩ => ?_
     simp only [mem_toZFSet_iff] at hx₂
     rcases hx₂ with ⟨o₂, ho₂, rfl⟩
     refine le_iInf fun y => ?_
-    grw [← le_himp, le_himp_iff, top_inf_eq, mem_sep (by fun_prop),
+    grw [← le_himp, le_himp_iff, top_inf_eq, bmem_sep' (by fun_prop),
       inf_le_right (a := _ ∈ᴮ prod _ _)]
     refine iSup_le fun o₁' => ?_
-    rw [kpair_eq_kpair]
+    rw [kpair_beq_kpair]
     by_cases ho₁' : o₁' = Ordinal.ToType.mk ⟨o₁, ho₁⟩
     · subst ho₁'
-      simp only [OrderIso.symm_apply_apply, eq_refl, le_top, inf_of_le_right, le_himp_iff]
-      grw [mem_sep (by fun_prop), inf_le_right (a := _ ∈ᴮ prod _ _), inf_iSup_eq]
+      simp only [OrderIso.symm_apply_apply, beq_refl, le_top, inf_of_le_right, le_himp_iff]
+      grw [bmem_sep' (by fun_prop), inf_le_right (a := _ ∈ᴮ prod _ _), inf_iSup_eq]
       refine iSup_le fun o₂' => ?_
-      rw [kpair_eq_kpair]
+      rw [kpair_beq_kpair]
       by_cases ho₂' : o₂' = Ordinal.ToType.mk ⟨o₂, ho₂⟩
       · subst ho₂'
-        simp only [OrderIso.symm_apply_apply, eq_refl, le_top, inf_of_le_right]
-        grw [eq_symm y, eq_trans]
+        simp only [OrderIso.symm_apply_apply, beq_refl, le_top, inf_of_le_right]
+        grw [beq_symm y, beq_trans]
         by_cases h : o₁ = o₂
         · simp [h]
         · grw [cohenReal_ne_cohenReal (by simpa), bot_le]
-      · rw [ZFSet.toBVSet_eq_toBVSet_of_ne fun ne => by
+      · rw [ZFSet.toBVSet_beq_toBVSet_of_ne fun ne => by
           rw [toZFSet_injective.eq_iff] at ne; simp [ne] at ho₂']
         simp
-    · rw [ZFSet.toBVSet_eq_toBVSet_of_ne fun ne => by
+    · rw [ZFSet.toBVSet_beq_toBVSet_of_ne fun ne => by
         rw [toZFSet_injective.eq_iff] at ne; simp [ne] at ho₁']
       simp
 

@@ -1,5 +1,9 @@
-import Mathlib.Data.Set.Finite.Basic
-import Mathlib.Order.CompleteBooleanAlgebra
+module
+
+public import Mathlib.Data.Set.Finite.Basic
+public import Mathlib.Order.CompleteBooleanAlgebra
+
+public section
 
 @[gcongr] theorem compl_congr {α} [Compl α] {a b : α} (h : a = b) : aᶜ = bᶜ :=
   congr_arg Compl.compl h

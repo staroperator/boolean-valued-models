@@ -1,90 +1,89 @@
-import BooleanValuedModels.BVSet.Defs
-import Mathlib.Logic.Small.Basic
+module
+
+public import BooleanValuedModels.BVSet.Basic
+
 import Mathlib.SetTheory.Cardinal.Order
+
+@[expose] public section
 
 variable {B : Type u} [CompleteBooleanAlgebra B]
 
 namespace BVSet
 
-def mix (ι : Type v) (a : ι → B) (u : ι → BVSet B) : BVSet B :=
-  mk (Σ i, (u i).Index) (fun ⟨_, x⟩ => x) fun ⟨i, x⟩ => a i ⊓ x ∈ᴮ u i
+noncomputable def mix (ι : Type v) (f : ι → BVSet B) (b : ι → B) : BVSet B :=
+  mkI (Σ i, (f i).dom) (fun ⟨_, x⟩ => x) fun ⟨i, x⟩ => b i ⊓ x ∈ᴮ f i
 
-variable {ι : Type v} {a : ι → B} {u : ι → BVSet B}
+variable {ι : Type v} {f : ι → BVSet B} {b : ι → B} {i : ι}
 
 /-- Mixing lemma. -/
-theorem le_mix_eq (ha : ∀ i j, i ≠ j → a i ⊓ a j ≤ u i =ᴮ u j) {i} : a i ≤ mix ι a u =ᴮ u i := by
-  rw [eq_def, subset_def, subset_def]
-  simp only [le_inf_iff, le_iInf_iff, le_himp_iff]
+theorem le_mix_beq (ha : ∀ i j, i ≠ j → b i ⊓ b j ≤ f i =ᴮ f j) : b i ≤ mix ι f b =ᴮ f i := by
+  simp only [mix, beq_def, mkI_bsubset, le_inf_iff, le_iInf_iff, le_himp_iff]
   constructor
-  · intro ⟨j, x⟩
-    simp only [mix, val_mk, dom_mk, ge_iff_le]
+  · intro ⟨j, x, hx⟩
+    simp only [ge_iff_le]
     by_cases hij : i = j
     · subst hij
       simp
-    · grw [← inf_assoc, ha i j hij]
-      apply mem_congr_right'
-  · intro j
-    simp only [mem_def]
-    apply le_iSup_of_le ⟨i, j⟩
-    simp only [mix, val_mk, dom_mk, BVSet.eq_refl, le_top, inf_of_le_left, le_inf_iff, inf_le_left,
-      true_and]
-    apply inf_le_of_right_le
-    exact val_le_dom_mem
+    · grw [← inf_assoc, ha i j hij, bmem_congr_right']
+  · simp only [bsubset_def, bmem_mkI, le_iInf_iff, le_himp_iff, Subtype.forall, mem_dom_iff]
+    intro x hx
+    apply le_iSup_of_le ⟨i, x, hx⟩
+    simp only [beq_refl, le_top, inf_of_le_left, le_inf_iff, inf_le_left, true_and]
+    grw [inf_le_right, val_le_bmem]
 
-theorem le_mix_eq_of_pairwise_disjoint (ha : ∀ i j, i ≠ j → Disjoint (a i) (a j)) {i} :
-    a i ≤ mix ι a u =ᴮ u i :=
-  le_mix_eq fun i j hij => le_of_eq_of_le (ha i j hij).eq_bot bot_le
+theorem le_mix_beq_of_pairwise_disjoint (ha : ∀ i j, i ≠ j → Disjoint (b i) (b j)) {i} :
+    b i ≤ mix ι f b =ᴮ f i :=
+  le_mix_beq fun i j hij => le_of_eq_of_le (ha i j hij).eq_bot bot_le
 
 /-- Maximum principle. -/
 theorem IsExtentional.exists_eq_iSup [Small.{v} B] {f : BVSet.{u, v} B → B}
     (hf : IsExtentional f) : ∃ u, f u = ⨆ x, f x := by
   let ι : Type v := Shrink { a // ∃ u, f u = a }
   rcases exists_wellOrder ι with ⟨hlo, hwo⟩
-  let u : ι → BVSet B := fun i => Classical.choose ((equivShrink _).symm i).2
-  let a : ι → B := fun i => f (u i) \ ⨆ j < i, f (u j)
-  have ha₁ : ∀ i, a i ≤ f (u i) := by simp [a]
-  have ha₂ : ∀ i, ⨆ j ≤ i, a j = ⨆ j ≤ i, f (u j) := by
+  let g : ι → BVSet B := fun i => Classical.choose ((equivShrink _).symm i).2
+  let b : ι → B := fun i => f (g i) \ ⨆ j < i, f (g j)
+  have hb₁ : ∀ i, b i ≤ f (g i) := by simp [b]
+  have hb₂ : ∀ i, ⨆ j ≤ i, b j = ⨆ j ≤ i, f (g j) := by
     intro i
     induction i using hwo.induction with | _ i ih
     rw [biSup_le_eq_sup, biSup_lt_eq_biSup_lt_biSup_le]
     conv_lhs => enter [1, 1, j, 1, hj]; rw [ih _ hj]
     rw [← biSup_lt_eq_biSup_lt_biSup_le, biSup_le_eq_sup]
-    simp [a]
-  have ha₃ : ∀ i, ∀ j < i, a i ⊓ a j = ⊥ := by
+    simp [b]
+  have hb₃ : ∀ i, ∀ j < i, b i ⊓ b j = ⊥ := by
     intro i j hij
-    grw [eq_bot_iff, ha₁ j]
-    simp only [a, sdiff_eq, compl_iSup]
+    grw [eq_bot_iff, hb₁ j]
+    simp only [b, sdiff_eq, compl_iSup]
     nth_grw 2 [inf_le_right]
     grw [iInf₂_le j hij, compl_inf_self]
-  exists mix ι a u
+  exists mix ι g b
   apply le_antisymm
-  · exact le_iSup f (mix ι a u)
-  · trans ⨆ i, f (u i)
+  · exact le_iSup f (mix ι g b)
+  · trans ⨆ i, f (g i)
     · rw [iSup_le_iff]
       intro x
       let i : ι := equivShrink _ ⟨f x, x, rfl⟩
       refine le_iSup_of_le i (ge_of_eq ?_)
-      simp only [u, i, Equiv.symm_apply_apply]
+      simp only [g, i, Equiv.symm_apply_apply]
       exact Classical.choose_spec (p := fun y => f y = f x) _
-    trans ⨆ i, a i
+    trans ⨆ i, b i
     · rw [iSup_le_iff]
       intro i
-      trans ⨆ j ≤ i, a j
-      · rw [ha₂ i]
-        apply le_iSup₂ (f := fun i _ => f (u i)) i
-        exact le_refl i
+      trans ⨆ j ≤ i, b j
+      · rw [hb₂ i]
+        apply le_iSup₂_of_le i <;> rfl
       · exact iSup₂_le_iSup _ _
     · rw [iSup_le_iff]
       intro i
-      rw [← inf_idem (a i)]
-      trans mix ι a u =ᴮ u i ⊓ a i
+      rw [← inf_idem (b i)]
+      trans mix ι g b =ᴮ g i ⊓ b i
       · gcongr
-        refine le_mix_eq_of_pairwise_disjoint fun i j hij => ?_
+        refine le_mix_beq_of_pairwise_disjoint fun i j hij => ?_
         rw [disjoint_iff]
         rcases hij.lt_or_gt with hij | hij
         · rw [inf_comm]
-          exact ha₃ j i hij
-        · exact ha₃ i j hij
-      · grw [ha₁ i, BVSet.eq_symm, hf (u i) (mix ι a u)]
+          exact hb₃ j i hij
+        · exact hb₃ i j hij
+      · grw [hb₁ i, beq_symm, hf (g i) (mix ι g b)]
 
 end BVSet

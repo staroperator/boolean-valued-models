@@ -1,4 +1,8 @@
-import Mathlib.SetTheory.Cardinal.Pigeonhole
+module
+
+public import Mathlib.SetTheory.Cardinal.Pigeonhole
+
+@[expose] public section
 
 open Order Ordinal Cardinal Set Order
 

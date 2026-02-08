@@ -1,5 +1,10 @@
+module
+
+public import Mathlib.Order.ConditionallyCompleteLattice.Basic
+
 import BooleanValuedModels.BooleanAlgebra.Lemmas
-import Mathlib.Order.ConditionallyCompleteLattice.Basic
+
+@[expose] public section
 
 class BooleanCompletion (α : Type*) [Preorder α] (β : Type*) [LE β] [OrderBot β] where
   embed : α ↪o β

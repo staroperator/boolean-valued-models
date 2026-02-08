@@ -1,4 +1,8 @@
-import Mathlib.ModelTheory.Syntax
+module
+
+public import Mathlib.ModelTheory.Syntax
+
+@[expose] public section
 
 namespace FirstOrder.Language
 

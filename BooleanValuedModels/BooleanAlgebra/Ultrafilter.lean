@@ -1,6 +1,11 @@
-import Mathlib.Data.Set.Finite.Basic
-import Mathlib.Order.PrimeIdeal
+module
+
+public import Mathlib.Data.Set.Finite.Basic
+public import Mathlib.Order.PrimeIdeal
+
 import Mathlib.Order.ZornAtoms
+
+@[expose] public section
 
 namespace Order
 

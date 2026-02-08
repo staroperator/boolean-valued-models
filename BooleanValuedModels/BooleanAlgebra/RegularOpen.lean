@@ -1,7 +1,12 @@
+module
+
+public import BooleanValuedModels.BooleanAlgebra.CountableChainCondition
+public import Mathlib.Topology.Bases
+public import Mathlib.Topology.Clopen
+
 import BooleanValuedModels.DeltaSystemLemma
-import BooleanValuedModels.BooleanAlgebra.CountableChainCondition
-import Mathlib.Topology.Bases
-import Mathlib.Topology.Clopen
+
+@[expose] public section
 
 variable {X Y : Type*} [TopologicalSpace X] [TopologicalSpace Y]
 

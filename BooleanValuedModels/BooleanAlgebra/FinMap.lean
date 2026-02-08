@@ -1,7 +1,10 @@
-import BooleanValuedModels.BooleanAlgebra.BooleanCompletion
-import BooleanValuedModels.BooleanAlgebra.RegularOpen
-import BooleanValuedModels.DeltaSystemLemma
-import Mathlib.Data.Finmap
+module
+
+public import BooleanValuedModels.BooleanAlgebra.BooleanCompletion
+public import BooleanValuedModels.BooleanAlgebra.RegularOpen
+public import Mathlib.Data.Finmap
+
+@[expose] public section
 
 noncomputable def Nontrivial.fst (α) [Nontrivial α] : α :=
   Classical.choose exists_pair_ne

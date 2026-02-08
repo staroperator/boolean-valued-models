@@ -1,7 +1,12 @@
-import BooleanValuedModels.BVSet.Relations
-import BooleanValuedModels.BooleanAlgebra.CountableChainCondition
+module
+
+public import BooleanValuedModels.BVSet.Relations
+public import BooleanValuedModels.BooleanAlgebra.CountableChainCondition
+public import Mathlib.SetTheory.ZFC.Cardinal
+
 import BooleanValuedModels.DeltaSystemLemma
-import Mathlib.SetTheory.ZFC.Ordinal
+
+@[expose] public section
 
 universe u v
 
@@ -14,13 +19,15 @@ def cardLE (u v : BVSet B) :=
 
 infix:70 " ≲ᴮ " => cardLE
 
-@[fun_prop] protected theorem IsExtentional.cardLE {f g : BVSet B → BVSet B}
+@[fun_prop]
+protected theorem IsExtentional.cardLE {f g : BVSet B → BVSet B}
     (hf : IsExtentionalFun f) (hg : IsExtentionalFun g) :
     IsExtentional fun x => f x ≲ᴮ g x := by
   unfold cardLE
   fun_prop
 
-@[gcongr] theorem cardLE_congr {u₁ u₂ v₁ v₂ : BVSet B} (h₁ : u₁ ≈ u₂) (h₂ : v₁ ≈ v₂) :
+@[gcongr]
+theorem cardLE_congr {u₁ u₂ v₁ v₂ : BVSet B} (h₁ : u₁ ≈ u₂) (h₂ : v₁ ≈ v₂) :
     u₁ ≲ᴮ v₁ = u₂ ≲ᴮ v₂ := by
   trans u₂ ≲ᴮ v₁
   · apply IsExtentional.congr _ h₁
@@ -28,24 +35,24 @@ infix:70 " ≲ᴮ " => cardLE
   · apply IsExtentional.congr _ h₂
     fun_prop
 
-theorem cardLE_inf_ne_empty_le_isSurjective [Small.{v} B] :
+theorem cardLE_inf_bne_empty_le_isSurjective [Small.{v} B] :
     u ≲ᴮ v ⊓ u ≠ᴮ ∅ ≤ ⨆ f, isFunc v u f ⊓ isSurjective v u f := by
-  simp_rw [cardLE, iSup_inf_eq, ne_empty, inf_iSup_eq]
+  simp_rw [cardLE, iSup_inf_eq, bne_empty, inf_iSup_eq]
   refine iSup_le fun f => iSup_le fun x₀ => ?_
   let g := sep (prod v u) fun z =>
     ⨆ x, x ∈ᴮ u ⊓ ⨆ y, y ∈ᴮ v ⊓ z =ᴮ kpair y x
       ⊓ (kpair x y ∈ᴮ f ⊔ (x =ᴮ x₀ ⊓ (⨆ x', x' ∈ᴮ u ⊓ kpair x' y ∈ᴮ f)ᶜ))
   refine le_iSup_of_le g (le_inf (le_inf (le_inf ?_ ?_) ?_) ?_)
-  · grw [isRel_eq_subset_prod, sep_subset (by fun_prop), ← le_top]
+  · grw [isRel_eq_bsubset_prod, sep_bsubset (by fun_prop), ← le_top]
   · refine le_iInf fun y => ?_
     rw [le_himp_iff]
     apply le_of_inf_le_of_compl_le (⨆ x', x' ∈ᴮ u ⊓ kpair x' y ∈ᴮ f)
     · rw [inf_iSup_eq]
       refine iSup_le fun x => le_iSup_of_le x (le_inf ?_ ?_)
       · grw [inf_le_right, inf_le_left]
-      · rw [mem_sep (by fun_prop)]
+      · rw [bmem_sep' (by fun_prop)]
         refine le_inf ?_ (le_iSup_of_le x (le_inf ?_ (le_iSup_of_le y (le_inf (le_inf ?_ ?_) ?_))))
-        · grw [← le_kpair_mem_prod]
+        · grw [← le_kpair_bmem_prod]
           apply le_inf
           · grw [inf_le_left, inf_le_right]
           · grw [inf_le_right, inf_le_left]
@@ -56,9 +63,9 @@ theorem cardLE_inf_ne_empty_le_isSurjective [Small.{v} B] :
           grw [inf_le_right, inf_le_right]
     · refine le_iSup_of_le x₀ (le_inf ?_ ?_)
       · grw [inf_le_left, inf_le_left, inf_le_right]
-      · rw [mem_sep (by fun_prop)]
+      · rw [bmem_sep' (by fun_prop)]
         refine le_inf ?_ (le_iSup_of_le x₀ (le_inf ?_ (le_iSup_of_le y (le_inf (le_inf ?_ ?_) ?_))))
-        · grw [← le_kpair_mem_prod]
+        · grw [← le_kpair_bmem_prod]
           apply le_inf
           · grw [inf_le_left, inf_le_right]
           · grw [inf_le_left, inf_le_left, inf_le_right]
@@ -69,20 +76,20 @@ theorem cardLE_inf_ne_empty_le_isSurjective [Small.{v} B] :
           · simp
           · grw [inf_le_right]
   · refine le_iInf fun y => le_himp_iff.2 (le_iInf fun x₁ => le_himp_iff.2 (le_iInf fun x₂ => ?_))
-    grw [le_himp_iff, le_himp_iff, mem_sep_le_apply (by fun_prop), inf_iSup_eq]
+    grw [le_himp_iff, le_himp_iff, bmem_sep_le_apply (by fun_prop), inf_iSup_eq]
     refine iSup_le fun x₁' => ?_
     grw [inf_le_right (a := _ ∈ᴮ u), inf_iSup_eq]
     refine iSup_le fun y' => ?_
-    grw [inf_le_right (a := _ ∈ᴮ v), ← inf_assoc, inf_right_comm, kpair_eq_kpair, ← inf_assoc]
-    apply IsExtentional.inf_eq_le_of_le' (by fun_prop) (by fun_prop) x₁ x₁'
-    apply IsExtentional.inf_eq_le_of_le' (by fun_prop) (by fun_prop) y y'
-    grw [le_himp_iff, mem_sep_le_apply (by fun_prop), inf_iSup_eq]
+    grw [inf_le_right (a := _ ∈ᴮ v), ← inf_assoc, inf_right_comm, kpair_beq_kpair, ← inf_assoc]
+    apply IsExtentional.inf_beq_le_of_le' (by fun_prop) (by fun_prop) x₁ x₁'
+    apply IsExtentional.inf_beq_le_of_le' (by fun_prop) (by fun_prop) y y'
+    grw [le_himp_iff, bmem_sep_le_apply (by fun_prop), inf_iSup_eq]
     refine iSup_le fun x₂' => ?_
     grw [inf_le_right (a := _ ∈ᴮ u), inf_iSup_eq]
     refine iSup_le fun y'' => ?_
-    grw [inf_le_right (a := _ ∈ᴮ v), ← inf_assoc, inf_right_comm, kpair_eq_kpair, ← inf_assoc]
-    apply IsExtentional.inf_eq_le_of_le' (by fun_prop) (by fun_prop) x₂ x₂'
-    apply IsExtentional.inf_eq_le_of_le' (by fun_prop) (by fun_prop) y y''
+    grw [inf_le_right (a := _ ∈ᴮ v), ← inf_assoc, inf_right_comm, kpair_beq_kpair, ← inf_assoc]
+    apply IsExtentional.inf_beq_le_of_le' (by fun_prop) (by fun_prop) x₂ x₂'
+    apply IsExtentional.inf_beq_le_of_le' (by fun_prop) (by fun_prop) y y''
     rw [inf_sup_left, inf_sup_left, inf_sup_right, inf_sup_right]
     refine sup_le (sup_le ?_ ?_) (sup_le ?_ ?_)
     · grw [inf_le_left (b := x₀ ∈ᴮ u), inf_right_comm _ (y ∈ᴮ v), inf_right_comm _ (y ∈ᴮ v),
@@ -97,17 +104,17 @@ theorem cardLE_inf_ne_empty_le_isSurjective [Small.{v} B] :
       refine le_iSup_of_le x₁ (le_inf ?_ ?_)
       · grw [inf_le_left, inf_le_left, inf_le_left, inf_le_right]
       · grw [inf_le_left, inf_le_right]
-    · grw [inf_le_left (a := x₁ =ᴮ x₀), inf_le_left (a := x₂ =ᴮ x₀), inf_assoc, eq_symm x₂ x₀,
-        eq_trans, inf_le_right]
+    · grw [inf_le_left (a := x₁ =ᴮ x₀), inf_le_left (a := x₂ =ᴮ x₀), inf_assoc, beq_symm x₂ x₀,
+        beq_trans, inf_le_right]
   · refine le_iInf fun x => le_himp_iff.2 ?_
     grw [inf_le_left (a := isFunc _ _ _), inf_le_left (a := isFunc _ _ _), ← inf_idem (x ∈ᴮ u),
       ← inf_assoc, isFunc_total', iSup_inf_eq]
     refine iSup_mono fun y => le_inf ?_ ?_
     · grw [inf_le_left, inf_le_left]
-    · rw [mem_sep (by fun_prop)]
+    · rw [bmem_sep' (by fun_prop)]
       refine le_inf ?_ (le_iSup_of_le x (le_inf ?_ (le_iSup_of_le y (le_inf (le_inf ?_ ?_)
         (le_sup_of_le_left ?_)))))
-      · grw [← le_kpair_mem_prod, inf_le_left (a := y ∈ᴮ v)]
+      · grw [← le_kpair_bmem_prod, inf_le_left (a := y ∈ᴮ v)]
       · grw [inf_le_right]
       · grw [inf_le_left, inf_le_left]
       · simp
@@ -118,39 +125,39 @@ theorem cardLE_refl [Small.{v} B] : u ≲ᴮ u = ⊤ := by
   rw [eq_top_iff]
   apply le_iSup_of_le <| (u.prod u).sep fun y => ⨆ x, x ∈ᴮ u ⊓ y =ᴮ kpair x x
   refine le_inf (le_inf (le_inf ?_ ?_) ?_) ?_
-  · rw [isRel_eq_subset_prod, sep_subset (by fun_prop)]
+  · rw [isRel_eq_bsubset_prod, sep_bsubset (by fun_prop)]
   · refine le_iInf fun x => le_himp_iff.2 (le_iSup_of_le x (le_inf ?_ ?_))
     · grw [inf_le_right]
-    · rw [top_inf_eq, mem_sep (by fun_prop)]
+    · rw [top_inf_eq, bmem_sep' (by fun_prop)]
       refine le_inf ?_ (le_iSup_of_le x ?_)
-      · grw [← le_kpair_mem_prod]
+      · grw [← le_kpair_bmem_prod]
         simp
       · simp
   · refine le_iInf fun x => le_himp_iff.2 (le_iInf fun y₁ => le_himp_iff.2 (le_iInf fun y₂ =>
       le_himp_iff.2 ?_))
-    grw [top_inf_eq, le_himp_iff, mem_sep_le_apply (by fun_prop), inf_iSup_eq]
+    grw [top_inf_eq, le_himp_iff, bmem_sep_le_apply (by fun_prop), inf_iSup_eq]
     refine iSup_le fun y => ?_
-    rw [← inf_assoc, kpair_eq_kpair, ← inf_assoc]
-    apply IsExtentional.inf_eq_le_of_le (by fun_prop) (by fun_prop) y₁ y
-    apply IsExtentional.inf_eq_le_of_le' (by fun_prop) (by fun_prop) x y
-    grw [le_himp_iff, mem_sep_le_apply (by fun_prop), inf_iSup_eq]
+    rw [← inf_assoc, kpair_beq_kpair, ← inf_assoc]
+    apply IsExtentional.inf_beq_le_of_le (by fun_prop) (by fun_prop) y₁ y
+    apply IsExtentional.inf_beq_le_of_le' (by fun_prop) (by fun_prop) x y
+    grw [le_himp_iff, bmem_sep_le_apply (by fun_prop), inf_iSup_eq]
     refine iSup_le fun y => ?_
-    rw [← inf_assoc, kpair_eq_kpair, ← inf_assoc]
-    apply IsExtentional.inf_eq_le_of_le (by fun_prop) (by fun_prop) y₂ y
-    apply IsExtentional.inf_eq_le_of_le' (by fun_prop) (by fun_prop) x y
+    rw [← inf_assoc, kpair_beq_kpair, ← inf_assoc]
+    apply IsExtentional.inf_beq_le_of_le (by fun_prop) (by fun_prop) y₂ y
+    apply IsExtentional.inf_beq_le_of_le' (by fun_prop) (by fun_prop) x y
     simp
   · refine le_iInf fun x₁ => le_himp_iff.2 (le_iInf fun x₂ => le_himp_iff.2 (le_iInf fun y =>
       le_himp_iff.2 ?_))
-    grw [top_inf_eq, le_himp_iff, mem_sep_le_apply (by fun_prop), inf_iSup_eq]
+    grw [top_inf_eq, le_himp_iff, bmem_sep_le_apply (by fun_prop), inf_iSup_eq]
     refine iSup_le fun y₁ => ?_
-    rw [← inf_assoc, kpair_eq_kpair, ← inf_assoc]
-    apply IsExtentional.inf_eq_le_of_le' (by fun_prop) (by fun_prop) y y₁
-    apply IsExtentional.inf_eq_le_of_le (by fun_prop) (by fun_prop) x₁ y
-    grw [le_himp_iff, mem_sep_le_apply (by fun_prop), inf_iSup_eq]
+    rw [← inf_assoc, kpair_beq_kpair, ← inf_assoc]
+    apply IsExtentional.inf_beq_le_of_le' (by fun_prop) (by fun_prop) y y₁
+    apply IsExtentional.inf_beq_le_of_le (by fun_prop) (by fun_prop) x₁ y
+    grw [le_himp_iff, bmem_sep_le_apply (by fun_prop), inf_iSup_eq]
     refine iSup_le fun y₂ => ?_
-    rw [← inf_assoc, kpair_eq_kpair, ← inf_assoc]
-    apply IsExtentional.inf_eq_le_of_le (by fun_prop) (by fun_prop) y y₂
-    apply IsExtentional.inf_eq_le_of_le' (by fun_prop) (by fun_prop) x₂ y₂
+    rw [← inf_assoc, kpair_beq_kpair, ← inf_assoc]
+    apply IsExtentional.inf_beq_le_of_le (by fun_prop) (by fun_prop) y y₂
+    apply IsExtentional.inf_beq_le_of_le' (by fun_prop) (by fun_prop) x₂ y₂
     simp
 
 theorem cardLE_trans [Small.{v} B] : u ≲ᴮ v ⊓ v ≲ᴮ w ≤ u ≲ᴮ w := by
@@ -160,7 +167,7 @@ theorem cardLE_trans [Small.{v} B] : u ≲ᴮ v ⊓ v ≲ᴮ w ≤ u ≲ᴮ w :=
   refine iSup_le fun g => le_iSup_of_le ((u.prod w).sep fun p =>
     ⨆ x, x ∈ᴮ u ⊓ ⨆ y, y ∈ᴮ v ⊓ ⨆ z, z ∈ᴮ w ⊓ kpair x y ∈ᴮ f ⊓ kpair y z ∈ᴮ g ⊓ p =ᴮ kpair x z) ?_
   refine le_inf (le_inf (le_inf ?_ ?_) ?_) ?_
-  · grw [isRel_eq_subset_prod, sep_subset (by fun_prop), ← le_top]
+  · grw [isRel_eq_bsubset_prod, sep_bsubset (by fun_prop), ← le_top]
   · grw [inf_le_left (b := isInjective u v f), inf_le_left (b := isInjective v w g)]
     refine le_iInf fun x => ?_
     grw [le_himp_iff, inf_inf_distrib_right, isFunc_total', iSup_inf_eq]
@@ -171,7 +178,7 @@ theorem cardLE_trans [Small.{v} B] : u ≲ᴮ v ⊓ v ≲ᴮ w ≤ u ≲ᴮ w :=
     rw [inf_comm (z ∈ᴮ w), ← inf_assoc, ← inf_assoc, ← inf_assoc]
     refine le_iSup_of_le z (le_inf ?_ ?_)
     · grw [inf_le_left, inf_le_left, inf_le_right]
-    · grw [mem_sep (by fun_prop), ← le_kpair_mem_prod]
+    · grw [bmem_sep' (by fun_prop), ← le_kpair_bmem_prod]
       refine le_inf (le_inf ?_ ?_) (le_iSup_of_le x (le_inf ?_ (le_iSup_of_le y (le_inf ?_
         (le_iSup_of_le z (le_inf (le_inf (le_inf ?_ ?_) ?_) ?_))))))
       · grw [inf_le_right]
@@ -185,24 +192,24 @@ theorem cardLE_trans [Small.{v} B] : u ≲ᴮ v ⊓ v ≲ᴮ w ≤ u ≲ᴮ w :=
   · grw [inf_le_left (b := isInjective u v f), inf_le_left (b := isInjective v w g)]
     refine le_iInf fun x => le_himp_iff.2 (le_iInf fun z₁ => le_himp_iff.2 (le_iInf fun z₂ =>
       le_himp_iff.2 ?_))
-    grw [le_himp_iff, mem_sep_le_apply (by fun_prop), inf_iSup_eq]
+    grw [le_himp_iff, bmem_sep_le_apply (by fun_prop), inf_iSup_eq]
     refine iSup_le fun x₁ => ?_
     rw [← inf_assoc, inf_iSup_eq]
     refine iSup_le fun y₁ => ?_
     rw [← inf_assoc, inf_iSup_eq]
     refine iSup_le fun z₁' => ?_
-    rw [← inf_assoc, ← inf_assoc, ← inf_assoc, kpair_eq_kpair, ← inf_assoc]
-    apply IsExtentional.inf_eq_le_of_le' (by fun_prop) (by fun_prop) z₁ z₁'
-    apply IsExtentional.inf_eq_le_of_le' (by fun_prop) (by fun_prop) x x₁
-    grw [le_himp_iff, mem_sep_le_apply (by fun_prop), inf_iSup_eq]
+    rw [← inf_assoc, ← inf_assoc, ← inf_assoc, kpair_beq_kpair, ← inf_assoc]
+    apply IsExtentional.inf_beq_le_of_le' (by fun_prop) (by fun_prop) z₁ z₁'
+    apply IsExtentional.inf_beq_le_of_le' (by fun_prop) (by fun_prop) x x₁
+    grw [le_himp_iff, bmem_sep_le_apply (by fun_prop), inf_iSup_eq]
     refine iSup_le fun x₂ => ?_
     rw [← inf_assoc, inf_iSup_eq]
     refine iSup_le fun y₂ => ?_
     rw [← inf_assoc, inf_iSup_eq]
     refine iSup_le fun z₂' => ?_
-    rw [← inf_assoc, ← inf_assoc, ← inf_assoc, kpair_eq_kpair, ← inf_assoc]
-    apply IsExtentional.inf_eq_le_of_le' (by fun_prop) (by fun_prop) z₂ z₂'
-    apply IsExtentional.inf_eq_le_of_le' (by fun_prop) (by fun_prop) x x₂
+    rw [← inf_assoc, ← inf_assoc, ← inf_assoc, kpair_beq_kpair, ← inf_assoc]
+    apply IsExtentional.inf_beq_le_of_le' (by fun_prop) (by fun_prop) z₂ z₂'
+    apply IsExtentional.inf_beq_le_of_le' (by fun_prop) (by fun_prop) x x₂
     apply le_of_inf_le (y₁ =ᴮ y₂)
     · grw [← isFunc_unique' (u := u) (v := v) (f := f) (x := x)]
       refine le_inf (le_inf (le_inf (le_inf (le_inf ?_ ?_) ?_) ?_) ?_) ?_
@@ -215,7 +222,7 @@ theorem cardLE_trans [Small.{v} B] : u ≲ᴮ v ⊓ v ≲ᴮ w ≤ u ≲ᴮ w :=
       · iterate 6 grw [inf_le_left]
         grw [inf_le_right]
       · grw [inf_le_left, inf_le_right]
-    · apply IsExtentional.inf_eq_le_of_le' (by fun_prop) (by fun_prop) y₁ y₂
+    · apply IsExtentional.inf_beq_le_of_le' (by fun_prop) (by fun_prop) y₁ y₂
       grw [← isFunc_unique' (u := v) (v := w) (f := g) (x := y₁)]
       refine le_inf (le_inf (le_inf (le_inf (le_inf ?_ ?_) ?_) ?_) ?_) ?_
       · iterate 13 grw [inf_le_left]
@@ -230,24 +237,24 @@ theorem cardLE_trans [Small.{v} B] : u ≲ᴮ v ⊓ v ≲ᴮ w ≤ u ≲ᴮ w :=
   · grw [inf_le_right (b := isInjective u v f), inf_le_right (b := isInjective v w g)]
     refine le_iInf fun x₁ => le_himp_iff.2 (le_iInf fun x₂ => le_himp_iff.2 (le_iInf fun z =>
       le_himp_iff.2 ?_))
-    grw [le_himp_iff, mem_sep_le_apply (by fun_prop), inf_iSup_eq]
+    grw [le_himp_iff, bmem_sep_le_apply (by fun_prop), inf_iSup_eq]
     refine iSup_le fun x₁' => ?_
     rw [← inf_assoc, inf_iSup_eq]
     refine iSup_le fun y₁ => ?_
     rw [← inf_assoc, inf_iSup_eq]
     refine iSup_le fun z₁ => ?_
-    rw [← inf_assoc, ← inf_assoc, ← inf_assoc, kpair_eq_kpair, ← inf_assoc]
-    apply IsExtentional.inf_eq_le_of_le' (by fun_prop) (by fun_prop) z z₁
-    apply IsExtentional.inf_eq_le_of_le' (by fun_prop) (by fun_prop) x₁ x₁'
-    grw [le_himp_iff, mem_sep_le_apply (by fun_prop), inf_iSup_eq]
+    rw [← inf_assoc, ← inf_assoc, ← inf_assoc, kpair_beq_kpair, ← inf_assoc]
+    apply IsExtentional.inf_beq_le_of_le' (by fun_prop) (by fun_prop) z z₁
+    apply IsExtentional.inf_beq_le_of_le' (by fun_prop) (by fun_prop) x₁ x₁'
+    grw [le_himp_iff, bmem_sep_le_apply (by fun_prop), inf_iSup_eq]
     refine iSup_le fun x₂' => ?_
     rw [← inf_assoc, inf_iSup_eq]
     refine iSup_le fun y₂ => ?_
     rw [← inf_assoc, inf_iSup_eq]
     refine iSup_le fun z₂ => ?_
-    rw [← inf_assoc, ← inf_assoc, ← inf_assoc, kpair_eq_kpair, ← inf_assoc]
-    apply IsExtentional.inf_eq_le_of_le' (by fun_prop) (by fun_prop) z z₂
-    apply IsExtentional.inf_eq_le_of_le' (by fun_prop) (by fun_prop) x₂ x₂'
+    rw [← inf_assoc, ← inf_assoc, ← inf_assoc, kpair_beq_kpair, ← inf_assoc]
+    apply IsExtentional.inf_beq_le_of_le' (by fun_prop) (by fun_prop) z z₂
+    apply IsExtentional.inf_beq_le_of_le' (by fun_prop) (by fun_prop) x₂ x₂'
     apply le_of_inf_le (y₁ =ᴮ y₂)
     · grw [← isInjective_injective (u := v) (v := w) (f := g) (y := z)]
       refine le_inf (le_inf (le_inf (le_inf (le_inf ?_ ?_) ?_) ?_) ?_) ?_
@@ -262,7 +269,7 @@ theorem cardLE_trans [Small.{v} B] : u ≲ᴮ v ⊓ v ≲ᴮ w ≤ u ≲ᴮ w :=
       · iterate 5 grw [inf_le_left]
         grw [inf_le_right]
       · grw [inf_le_right]
-    · apply IsExtentional.inf_eq_le_of_le' (by fun_prop) (by fun_prop) y₁ y₂
+    · apply IsExtentional.inf_beq_le_of_le' (by fun_prop) (by fun_prop) y₁ y₂
       grw [← isInjective_injective (u := u) (v := v) (f := f) (y := y₁)]
       refine le_inf (le_inf (le_inf (le_inf (le_inf ?_ ?_) ?_) ?_) ?_) ?_
       · repeat grw [inf_le_left]
@@ -284,13 +291,15 @@ def cardLT (u v : BVSet B) :=
 
 infix:70 " <ᴮ " => cardLT
 
-@[fun_prop] protected theorem IsExtentional.cardLT {f g : BVSet B → BVSet B}
+@[fun_prop]
+protected theorem IsExtentional.cardLT {f g : BVSet B → BVSet B}
     (hf : IsExtentionalFun f) (hg : IsExtentionalFun g) :
     IsExtentional fun x => f x <ᴮ g x := by
   unfold cardLT
   fun_prop
 
-@[gcongr] theorem cardLT_congr {u₁ u₂ v₁ v₂ : BVSet B} (h₁ : u₁ ≈ u₂) (h₂ : v₁ ≈ v₂) :
+@[gcongr]
+theorem cardLT_congr {u₁ u₂ v₁ v₂ : BVSet B} (h₁ : u₁ ≈ u₂) (h₂ : v₁ ≈ v₂) :
     u₁ <ᴮ v₁ = u₂ <ᴮ v₂ := by
   trans u₂ <ᴮ v₁
   · apply IsExtentional.congr _ h₁
@@ -324,13 +333,15 @@ def cardEQ (u v : BVSet B) :=
 
 infix:70 " ≈ᴮ " => cardEQ
 
-@[fun_prop] protected theorem IsExtentional.cardEQ {f g : BVSet B → BVSet B}
+@[fun_prop]
+protected theorem IsExtentional.cardEQ {f g : BVSet B → BVSet B}
     (hf : IsExtentionalFun f) (hg : IsExtentionalFun g) :
     IsExtentional fun x => f x ≈ᴮ g x := by
   unfold cardEQ
   fun_prop
 
-@[gcongr] theorem cardEQ_congr {u₁ u₂ v₁ v₂ : BVSet B} (h₁ : u₁ ≈ u₂) (h₂ : v₁ ≈ v₂) :
+@[gcongr]
+theorem cardEQ_congr {u₁ u₂ v₁ v₂ : BVSet B} (h₁ : u₁ ≈ u₂) (h₂ : v₁ ≈ v₂) :
     u₁ ≈ᴮ v₁ = u₂ ≈ᴮ v₂ := by
   trans u₂ ≈ᴮ v₁
   · apply IsExtentional.congr _ h₁
@@ -350,64 +361,64 @@ theorem cardLE_toBVSet_of_card_le_card [Small.{v} B] (h : x.card ≤ y.card) :
     x.toBVSet ≲ᴮ y.toBVSet = (⊤ : B) := by
   classical
   haveI := @Classical.allZFSetDefinable
-  rw [← lift_le, ← ZFSet.cardinalMk_coe_sort, ← ZFSet.cardinalMk_coe_sort, Cardinal.le_def] at h
+  rw [← lift_le, ← cardinalMk_coe_sort, ← cardinalMk_coe_sort, Cardinal.le_def] at h
   rcases h with ⟨f⟩
-  let g : ZFSet := ZFSet.map (fun z => if hz : z ∈ x then f ⟨z, hz⟩ else ∅) x
+  let g : ZFSet := map (fun z => if hz : z ∈ x then f ⟨z, hz⟩ else ∅) x
   rw [eq_top_iff]
   apply le_iSup_of_le g.toBVSet
-  rw [ZFSet.isFunc_toBVSet_of_isFunc, ZFSet.isInjective_toBVSet_of_injOn, top_inf_eq]
+  rw [isFunc_toBVSet_of_isFunc, isInjective_toBVSet_of_injOn, top_inf_eq]
   · intro z₁ hz₁ z₂ hz₂ h
     simp only [SetLike.mem_coe] at hz₁ hz₂
     simpa [hz₁, hz₂] using h
-  · rw [ZFSet.map_isFunc]
+  · rw [map_isFunc]
     intro z hz
     simp [hz]
 
 theorem cardLE_toBVSet_of_card_gt_card [Small.{v} B] [CountableChainCondition B]
     (h : y.card < x.card) : x.toBVSet ≲ᴮ y.toBVSet = (⊥ : B) := by
   have hxne : x.toBVSet ≠ᴮ ∅ = (⊤ : B) := by
-    grw [← ZFSet.toBVSet_empty, ZFSet.toBVSet_eq_toBVSet_of_ne, compl_bot]
+    grw [← toBVSet_empty, toBVSet_beq_toBVSet_of_ne, compl_bot]
     rintro rfl
     simp at h
-  rw [← lift_lt, ← ZFSet.cardinalMk_coe_sort, ← ZFSet.cardinalMk_coe_sort] at h
+  rw [← lift_lt, ← cardinalMk_coe_sort, ← cardinalMk_coe_sort] at h
   rcases le_or_gt x.card ℵ₀ with hx | hx
-  · rw [← lift_le, ← ZFSet.cardinalMk_coe_sort, lift_aleph0] at hx
+  · rw [← lift_le, ← cardinalMk_coe_sort, lift_aleph0] at hx
     haveI : Finite y := by rw [← lt_aleph0_iff_finite]; exact h.trans_le hx
-    grw [eq_bot_iff, ← inf_top_eq (_ ≲ᴮ _), ← hxne, cardLE_inf_ne_empty_le_isSurjective]
+    grw [eq_bot_iff, ← inf_top_eq (_ ≲ᴮ _), ← hxne, cardLE_inf_bne_empty_le_isSurjective]
     apply iSup_le
     intro f
     rw [← inf_idem (isFunc _ _ _)]
     nth_grw 2 [isFunc_total]
-    rw [IsExtentional.iInf_mem_toBVSet_himp (by fun_prop)]
-    conv_lhs => enter [1, 2, 1, z]; rw [IsExtentional.iSup_mem_toBVSet_inf (by fun_prop)]
+    rw [IsExtentional.iInf_bmem_toBVSet_himp (by fun_prop)]
+    conv_lhs => enter [1, 2, 1, z]; rw [IsExtentional.iSup_bmem_toBVSet_inf (by fun_prop)]
     rw [iInf_iSup_eq_of_finite, inf_iSup_eq, iSup_inf_eq]
     apply iSup_le
     intro g
     have : ¬ g.Surjective := fun hg => (Cardinal.mk_le_of_surjective hg).not_gt h
     simp only [Function.Surjective, not_forall, not_exists] at this
     rcases this with ⟨z, hz⟩
-    grw [isSurjective, IsExtentional.iInf_mem_toBVSet_himp (by fun_prop), iInf_le _ z,
-      IsExtentional.iSup_mem_toBVSet_inf (by fun_prop), inf_iSup_eq]
+    grw [isSurjective, IsExtentional.iInf_bmem_toBVSet_himp (by fun_prop), iInf_le _ z,
+      IsExtentional.iSup_bmem_toBVSet_inf (by fun_prop), inf_iSup_eq]
     apply iSup_le
     intro z'
-    grw [iInf_le _ z', ← inf_top_eq (isFunc _ _ _), ← ZFSet.toBVSet_mem_toBVSet_of_mem z.2,
-      ← inf_top_eq (isFunc _ _ _), ← ZFSet.toBVSet_mem_toBVSet_of_mem (g z').2,
-      ← inf_top_eq (isFunc _ _ _), ← ZFSet.toBVSet_mem_toBVSet_of_mem z'.2, isFunc_unique']
-    simp [ZFSet.toBVSet_eq_toBVSet_of_ne (Subtype.val_injective.ne (hz z'))]
-  · rw [← lift_lt, ← ZFSet.cardinalMk_coe_sort, lift_aleph0, aleph0_lt_mk_iff] at hx
+    grw [iInf_le _ z', ← inf_top_eq (isFunc _ _ _), ← toBVSet_bmem_toBVSet_of_mem z.2,
+      ← inf_top_eq (isFunc _ _ _), ← toBVSet_bmem_toBVSet_of_mem (g z').2,
+      ← inf_top_eq (isFunc _ _ _), ← toBVSet_bmem_toBVSet_of_mem z'.2, isFunc_unique']
+    simp [toBVSet_beq_toBVSet_of_ne (Subtype.val_injective.ne (hz z'))]
+  · rw [← lift_lt, ← cardinalMk_coe_sort, lift_aleph0, aleph0_lt_mk_iff] at hx
     by_contra
     grw [← ne_eq, ← bot_lt_iff_ne_bot, ← inf_top_eq (_ ≲ᴮ _), ← hxne,
-      cardLE_inf_ne_empty_le_isSurjective, bot_lt_iSup] at this
+      cardLE_inf_bne_empty_le_isSurjective, bot_lt_iSup] at this
     rcases this with ⟨f, hf⟩
     generalize ha : isFunc (y.toBVSet : BVSet B) x.toBVSet f ⊓ isSurjective y.toBVSet x.toBVSet f
       = a at hf
     rw [← inf_idem a] at hf
     nth_grw 2 [← ha, inf_le_right] at hf
-    rw [isSurjective, IsExtentional.iInf_mem_toBVSet_himp (by fun_prop), inf_iInf] at hf
+    rw [isSurjective, IsExtentional.iInf_bmem_toBVSet_himp (by fun_prop), inf_iInf] at hf
     apply forall_lt_of_lt_iInf at hf
     conv at hf =>
       intro z
-      rw [IsExtentional.iSup_mem_toBVSet_inf (by fun_prop), inf_iSup_eq, bot_lt_iSup]
+      rw [IsExtentional.iSup_bmem_toBVSet_inf (by fun_prop), inf_iSup_eq, bot_lt_iSup]
     choose g hg using hf
     rcases exists_uncountable_fiber g h hx with ⟨z, hz⟩
     apply hz.not_countable
@@ -421,12 +432,12 @@ theorem cardLE_toBVSet_of_card_gt_card [Small.{v} B] [CountableChainCondition B]
       nth_rw 2 [hz₁] at this
       rw [h, hz₁, ← inf_inf_distrib_left, ← inf_assoc, ← ha] at this
       nth_grw 3 [inf_le_left] at this
-      rw [← inf_top_eq (isFunc _ _ _), ← ZFSet.toBVSet_mem_toBVSet_of_mem z₂.2,
-        ← inf_top_eq (isFunc _ _ _), ← ZFSet.toBVSet_mem_toBVSet_of_mem z₁.2,
-        ← inf_top_eq (isFunc _ _ _), ← ZFSet.toBVSet_mem_toBVSet_of_mem z.2] at this
+      rw [← inf_top_eq (isFunc _ _ _), ← toBVSet_bmem_toBVSet_of_mem z₂.2,
+        ← inf_top_eq (isFunc _ _ _), ← toBVSet_bmem_toBVSet_of_mem z₁.2,
+        ← inf_top_eq (isFunc _ _ _), ← toBVSet_bmem_toBVSet_of_mem z.2] at this
       grw [isFunc_unique'] at this
       by_contra! hne
-      simp [ZFSet.toBVSet_eq_toBVSet_of_ne (Subtype.val_injective.ne hne)] at this
+      simp [toBVSet_beq_toBVSet_of_ne (Subtype.val_injective.ne hne)] at this
     · apply CountableChainCondition.ccc
       apply Set.Pairwise.image
       simp only [Set.Pairwise, Set.mem_preimage, Set.mem_singleton_iff, ne_eq, Function.onFun]
@@ -435,11 +446,11 @@ theorem cardLE_toBVSet_of_card_gt_card [Small.{v} B] [CountableChainCondition B]
       rw [disjoint_iff, ← ne_eq, ← bot_lt_iff_ne_bot, ← inf_inf_distrib_left, ← inf_assoc, ← ha]
         at this
       nth_grw 3 [inf_le_left] at this
-      rw [← inf_top_eq (isFunc _ _ _), ← ZFSet.toBVSet_mem_toBVSet_of_mem z₂.2,
-        ← inf_top_eq (isFunc _ _ _), ← ZFSet.toBVSet_mem_toBVSet_of_mem z₁.2,
-        ← inf_top_eq (isFunc _ _ _), ← ZFSet.toBVSet_mem_toBVSet_of_mem z.2] at this
+      rw [← inf_top_eq (isFunc _ _ _), ← toBVSet_bmem_toBVSet_of_mem z₂.2,
+        ← inf_top_eq (isFunc _ _ _), ← toBVSet_bmem_toBVSet_of_mem z₁.2,
+        ← inf_top_eq (isFunc _ _ _), ← toBVSet_bmem_toBVSet_of_mem z.2] at this
       grw [isFunc_unique'] at this
-      simp [ZFSet.toBVSet_eq_toBVSet_of_ne (Subtype.val_injective.ne hne)] at this
+      simp [toBVSet_beq_toBVSet_of_ne (Subtype.val_injective.ne hne)] at this
 
 theorem cardLT_toBVSet_of_card_lt_card [Small.{v} B] [CountableChainCondition B]
     (h : x.card < y.card) : x.toBVSet <ᴮ y.toBVSet = (⊤ : B) := by

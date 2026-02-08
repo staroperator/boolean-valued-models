@@ -1,6 +1,11 @@
-import BooleanValuedModels.BooleanAlgebra.Ultrafilter
+module
+
+public import BooleanValuedModels.BooleanAlgebra.Ultrafilter
+public import Mathlib.ModelTheory.Satisfiability
+
 import BooleanValuedModels.BooleanAlgebra.Lemmas
-import Mathlib.ModelTheory.Satisfiability
+
+@[expose] public section
 
 namespace FirstOrder.Language
 
@@ -8,14 +13,14 @@ class BVStructure (L : Language.{u, v}) (M : Type*) (B : outParam Type*) [Comple
     where
   funMap : ∀ {n}, L.Functions n → (Fin n → M) → M
   relMap : ∀ {n}, L.Relations n → (Fin n → M) → B
-  eq : M → M → B
-  eq_refl : ∀ x, eq x x = ⊤
-  eq_symm : ∀ x y, eq x y = eq y x
-  eq_trans : ∀ x y z, eq x y ⊓ eq y z ≤ eq x z
-  eq_funMap : ∀ {n} (f : L.Functions n) (v w : Fin n → M),
-    ⨅ i, eq (v i) (w i) ≤ eq (funMap f v) (funMap f w)
-  eq_relMap : ∀ {n} (r : L.Relations n) (v w : Fin n → M),
-    (⨅ i, eq (v i) (w i)) ⊓ relMap r v ≤ relMap r w
+  beq : M → M → B
+  beq_refl : ∀ x, beq x x = ⊤
+  beq_symm : ∀ x y, beq x y = beq y x
+  beq_trans : ∀ x y z, beq x y ⊓ beq y z ≤ beq x z
+  beq_funMap : ∀ {n} (f : L.Functions n) (v w : Fin n → M),
+    ⨅ i, beq (v i) (w i) ≤ beq (funMap f v) (funMap f w)
+  beq_relMap : ∀ {n} (r : L.Relations n) (v w : Fin n → M),
+    (⨅ i, beq (v i) (w i)) ⊓ relMap r v ≤ relMap r w
 
 variable {L : Language.{u, v}} {M B : Type*} [CompleteBooleanAlgebra B] [L.BVStructure M B]
   {α : Type w} {n}
@@ -47,13 +52,13 @@ theorem bvrealize_relabel {β} {t : L.Term α} {g : α → β} {v : β → M} :
   | var => rfl
   | func f ts ih => simp [ih]
 
-theorem eq_le_eq_bvrealize {t : L.Term α} {v w : α → M} :
-    ⨅ i, eq L (v i) (w i) ≤ eq L (t.bvrealize v) (t.bvrealize w) := by
+theorem beq_le_beq_bvrealize {t : L.Term α} {v w : α → M} :
+    ⨅ i, beq L (v i) (w i) ≤ beq L (t.bvrealize v) (t.bvrealize w) := by
   induction t with
   | var i =>
     exact iInf_le _ i
   | func f ts ih =>
-    exact (le_iInf fun i => ih i).trans (eq_funMap f _ _)
+    exact (le_iInf fun i => ih i).trans (beq_funMap f _ _)
 
 end Term
 
@@ -61,7 +66,7 @@ namespace BoundedFormula
 
 def bvrealize : ∀ {n}, L.BoundedFormula α n → (α → M) → (Fin n → M) → B
   | _, falsum, _v, _xs => ⊥
-  | _, equal t₁ t₂, v, xs => eq L (t₁.bvrealize (Sum.elim v xs)) (t₂.bvrealize (Sum.elim v xs))
+  | _, equal t₁ t₂, v, xs => beq L (t₁.bvrealize (Sum.elim v xs)) (t₂.bvrealize (Sum.elim v xs))
   | _, rel R ts, v, xs => relMap R fun i => (ts i).bvrealize (Sum.elim v xs)
   | _, imp f₁ f₂, v, xs => bvrealize f₁ v xs ⇨ bvrealize f₂ v xs
   | _, all f, v, xs => ⨅ x : M, bvrealize f v (Fin.snoc xs x)
@@ -84,7 +89,7 @@ theorem bvrealize_not : φ.not.bvrealize v xs = (φ.bvrealize v xs)ᶜ := by
 @[simp]
 theorem bvrealize_bdEqual (t₁ t₂ : L.Term (α ⊕ Fin n)) :
     (t₁.bdEqual t₂).bvrealize v xs
-      = eq L (t₁.bvrealize (Sum.elim v xs)) (t₂.bvrealize (Sum.elim v xs)) :=
+      = beq L (t₁.bvrealize (Sum.elim v xs)) (t₂.bvrealize (Sum.elim v xs)) :=
   rfl
 
 @[simp]
@@ -119,7 +124,7 @@ theorem bvrealize_mapTermRel_add_castLe {β} {L' : Language} [L'.BVStructure M B
       ∀ (n) (t : L.Term (α ⊕ (Fin n))) (xs' : Fin (k + n) → M),
         (ft n t).bvrealize (Sum.elim v' xs') = t.bvrealize (Sum.elim (v xs') (xs' ∘ Fin.natAdd _)))
     (h2 : ∀ (n) (R : L.Relations n) (x : Fin n → M), relMap (fr n R) x = relMap R x)
-    (h3 : ∀ (x y : M), eq L' x y = eq L x y)
+    (h3 : ∀ (x y : M), beq L' x y = beq L x y)
     (hv : ∀ (n) (xs : Fin (k + n) → M) (x : M), @v (n + 1) (Fin.snoc xs x : Fin _ → M) = v xs) :
     (φ.mapTermRel ft fr fun _ => castLE (add_assoc _ _ _).symm.le).bvrealize v' xs =
       φ.bvrealize (v xs) (xs ∘ Fin.natAdd _) := by
@@ -137,29 +142,29 @@ theorem bvrealize_relabel {β} {m n : ℕ} {φ : L.BoundedFormula α n} {g : α 
       φ.bvrealize (Sum.elim v (xs ∘ Fin.castAdd n) ∘ g) (xs ∘ Fin.natAdd m) := by
   apply bvrealize_mapTermRel_add_castLe <;> simp
 
-theorem eq_inf_bvrealize_le_bvrealize {φ : L.BoundedFormula α n} {v w : α → M} {xs ys : Fin n → M} :
-    (⨅ i, eq L (v i) (w i)) ⊓ (⨅ i, eq L (xs i) (ys i)) ⊓ φ.bvrealize v xs ≤ φ.bvrealize w ys := by
+theorem beq_inf_bvrealize_le_bvrealize {φ : L.BoundedFormula α n} {v w : α → M} {xs ys : Fin n → M} :
+    (⨅ i, beq L (v i) (w i)) ⊓ (⨅ i, beq L (xs i) (ys i)) ⊓ φ.bvrealize v xs ≤ φ.bvrealize w ys := by
   induction φ generalizing v w with
   | falsum => simp [bvrealize]
   | equal t₁ t₂ =>
     simp only [bvrealize]
-    apply (eq_trans _ (t₁.bvrealize (Sum.elim v xs)) _).trans'
+    apply (beq_trans _ (t₁.bvrealize (Sum.elim v xs)) _).trans'
     apply le_inf
-    · refine Term.eq_le_eq_bvrealize.trans' (le_iInf fun i => ?_)
+    · refine Term.beq_le_beq_bvrealize.trans' (le_iInf fun i => ?_)
       cases i with
-      | inl i => grw [inf_le_left, inf_le_left, iInf_le _ i, eq_symm]; rfl
-      | inr i => grw [inf_le_left, inf_le_right, iInf_le _ i, eq_symm]; rfl
-    apply (eq_trans _ (t₂.bvrealize (Sum.elim v xs)) _).trans'
+      | inl i => grw [inf_le_left, inf_le_left, iInf_le _ i, beq_symm]; rfl
+      | inr i => grw [inf_le_left, inf_le_right, iInf_le _ i, beq_symm]; rfl
+    apply (beq_trans _ (t₂.bvrealize (Sum.elim v xs)) _).trans'
     apply le_inf
     · exact inf_le_right
-    · refine Term.eq_le_eq_bvrealize.trans' (le_iInf fun i => ?_)
+    · refine Term.beq_le_beq_bvrealize.trans' (le_iInf fun i => ?_)
       cases i with
       | inl i => grw [inf_le_left, inf_le_left, iInf_le _ i]; rfl
       | inr i => grw [inf_le_left, inf_le_right, iInf_le _ i]; rfl
   | rel r ts =>
     simp only [bvrealize]
-    refine (eq_relMap r _ _).trans' (inf_le_inf_right _ (le_iInf fun i => ?_))
-    grw [← Term.eq_le_eq_bvrealize]
+    refine (beq_relMap r _ _).trans' (inf_le_inf_right _ (le_iInf fun i => ?_))
+    grw [← Term.beq_le_beq_bvrealize]
     refine le_iInf fun j => ?_
     cases j with
     | inl j => grw [inf_le_left, iInf_le _ j]; rfl
@@ -168,7 +173,7 @@ theorem eq_inf_bvrealize_le_bvrealize {φ : L.BoundedFormula α n} {v w : α →
     simp only [bvrealize]
     grw [le_himp_iff, ← ih₂ (v := v) (w := w)]
     refine le_inf (inf_le_of_left_le inf_le_left) ?_
-    simp_rw [fun i => eq_symm (L := L) (v i) (w i), fun i => eq_symm (L := L) (xs i) (ys i)]
+    simp_rw [fun i => beq_symm (L := L) (v i) (w i), fun i => beq_symm (L := L) (xs i) (ys i)]
     grw [inf_right_comm, ih₁, inf_himp_le]
   | all φ ih =>
     simp only [bvrealize]
@@ -177,7 +182,7 @@ theorem eq_inf_bvrealize_le_bvrealize {φ : L.BoundedFormula α n} {v w : α →
     refine le_inf (inf_le_of_left_le (inf_le_inf_left _ ?_)) (inf_le_of_right_le (iInf_le _ a))
     refine le_iInf fun i => ?_
     cases i using Fin.lastCases with
-    | last => simp [eq_refl]
+    | last => simp [beq_refl]
     | cast i => grw [iInf_le _ i]; simp
 
 end BoundedFormula
@@ -274,16 +279,16 @@ open Order
 variable (L : Language) (M : Type*) [L.BVStructure M B] (F : PFilter B)
 
 def ultraFilterSetoid : Setoid M where
-  r x y := eq L x y ∈ F
-  iseqv.refl x := by simp [eq_refl]
-  iseqv.symm h := by simpa [eq_symm]
-  iseqv.trans h₁ h₂ := F.mem_of_le (eq_trans _ _ _) (F.inf_mem h₁ h₂)
+  r x y := beq L x y ∈ F
+  iseqv.refl x := by simp [beq_refl]
+  iseqv.symm h := by simpa [beq_symm]
+  iseqv.trans h₁ h₂ := F.mem_of_le (beq_trans _ _ _) (F.inf_mem h₁ h₂)
 
 variable {L M F} in
 @[simp]
 theorem equiv_def {x y : M} :
     @HasEquiv.Equiv M (@instHasEquivOfSetoid _ (ultraFilterSetoid L M F)) x y ↔
-      eq L x y ∈ F := Iff.rfl
+      beq L x y ∈ F := Iff.rfl
 
 abbrev QuotientStructure :=
   Quotient (ultraFilterSetoid L M F)
@@ -294,13 +299,13 @@ instance quotientStructure : L.Structure (QuotientStructure L M F) where
   funMap f v := Quotient.finLiftOn v (Quotient.mk _ ∘ BVStructure.funMap f) fun v w h => by
     apply Quotient.sound
     simp only [equiv_def] at h ⊢
-    apply F.mem_of_le (eq_funMap f v w)
+    apply F.mem_of_le (beq_funMap f v w)
     exact F.iInf_mem h
   RelMap r v := Quotient.finLiftOn v (BVStructure.relMap r · ∈ F) fun v w h => by
     simp only [eq_iff_iff]
-    refine ⟨fun h' => F.mem_of_le (eq_relMap r v w) <| F.inf_mem (F.iInf_mem h) h',
-      fun h' => F.mem_of_le (eq_relMap r w v) <| F.inf_mem (F.iInf_mem fun i => ?_) h'⟩
-    rw [eq_symm]
+    refine ⟨fun h' => F.mem_of_le (beq_relMap r v w) <| F.inf_mem (F.iInf_mem h) h',
+      fun h' => F.mem_of_le (beq_relMap r w v) <| F.inf_mem (F.iInf_mem fun i => ?_) h'⟩
+    rw [beq_symm]
     exact h i
 
 @[simp]
