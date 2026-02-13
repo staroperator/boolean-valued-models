@@ -7,6 +7,7 @@ public import BooleanValuedModels.BooleanAlgebra.BooleanCompletion
 public import BooleanValuedModels.BooleanAlgebra.RegularOpen
 public import BooleanValuedModels.BooleanAlgebra.FinMap
 public import BooleanValuedModels.BooleanAlgebra.Ultrafilter
+public import BooleanValuedModels.BooleanAlgebra.GroupAction
 public import BooleanValuedModels.ModelTheory.BVSemantics
 public import BooleanValuedModels.ModelTheory.FinLemmas
 public import BooleanValuedModels.ZFC.Syntax
@@ -19,4 +20,5 @@ public import BooleanValuedModels.BVSet.Relations
 public import BooleanValuedModels.BVSet.Choice
 public import BooleanValuedModels.BVSet.Cardinal
 public import BooleanValuedModels.BVSet.Semantics
+public import BooleanValuedModels.BVSet.SymmetricModel
 public import BooleanValuedModels.BVSet.Forcing.CH

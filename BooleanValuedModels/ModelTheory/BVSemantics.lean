@@ -272,6 +272,8 @@ nonrec def Sentence.bvrealize (φ : L.Sentence) : B :=
 class Theory.BVModel (M : Type*) [L.BVStructure M B] (T : L.Theory) where
   bvrealize_of_mem : ∀ φ ∈ T, φ.bvrealize M = ⊤
 
+infixl:51 " ⊨ᵇᵛ " => Theory.BVModel
+
 namespace BVStructure
 
 open Order
@@ -382,7 +384,7 @@ theorem QuotientStructure.sentence_realize [hM : IsFull.{0} L M B] [hF : F.IsUlt
   rw [Sentence.Realize, Sentence.bvrealize]
   convert formula_realize (F := F) (M := M) (φ := φ)
 
-variable {T : L.Theory} [T.BVModel M] {φ : L.Sentence}
+variable {T : L.Theory} [M ⊨ᵇᵛ T] {φ : L.Sentence}
 
 instance [IsFull.{0} L M B] [F.IsUltra] : QuotientStructure L M F ⊨ T where
   realize_of_mem φ hφ := by

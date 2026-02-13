@@ -88,6 +88,17 @@ def axiomOfInfinity : set.Sentence :=
 def axiomOfRegularity : set.Sentence :=
   ∀' (∃' (&1 ∈' &0) ⟹ ∃' (&1 ∈' &0 ⊓ ∼ (∃' (&2 ∈' &1 ⊓ &2 ∈' &0))))
 
+-- -- ∀ x₁, ⋯, xₙ a, ∃ b, ∀ x, x ∈ b ↔ x ∈ a ∧ φ(x₁, ⋯, xₙ, x)
+noncomputable def axiomOfSeparation [Finite α] (φ : set.Formula (α ⊕ Fin 1)) : set.Sentence :=
+  Formula.iAlls α (∀' ∃' ∀'
+    (&2 ∈' &1 ⇔ &2 ∈' &0 ⊓ BoundedFormula.relabel (k := 0) (Sum.map Sum.inr ![2]) φ))
+
+-- ∀ x₁, ⋯, xₙ a, (∀ x ∈ a, ∃ y, φ(x₁, ⋯, xₙ, x, y)) → ∃ b, ∀ x, x ∈ a → ∃ y ∈ b ∧ φ(x₁, ⋯, xₙ, x, y)
+noncomputable def axiomOfCollection [Finite α] (φ : set.Formula (α ⊕ Fin 2)) : set.Sentence :=
+  Formula.iAlls α (∀' (
+    (∀' (&1 ∈' &0 ⟹ ∃' (BoundedFormula.relabel (k := 0) (Sum.map Sum.inr ![1, 2]) φ)))
+      ⟹ ∃' ∀' (&2 ∈' &0 ⟹ ∃' (&3 ∈' &1 ⊓ BoundedFormula.relabel (k := 0) (Sum.map Sum.inr ![2, 3]) φ))))
+
 -- ∀ x₁, ⋯, xₙ a, (∀ x ∈ a, ∃! y, φ(x₁, ⋯, xₙ, x, y)) → ∃ b, ∀ y, x ∈ b ↔ ∃ x ∈ a ∧ φ(x₁, ⋯, xₙ, x y)
 noncomputable def axiomOfReplacement [Finite α] (φ : set.Formula (α ⊕ Fin 2)) : set.Sentence :=
   Formula.iAlls α (∀' (
@@ -173,7 +184,8 @@ inductive zfAxioms : set.Sentence → Prop
 | powerset : zfAxioms axiomOfPowerset
 | infinity : zfAxioms axiomOfInfinity
 | regularity : zfAxioms axiomOfRegularity
-| replacement {n} (φ : set.Formula (Fin n ⊕ Fin 2)) : zfAxioms (axiomOfReplacement φ)
+| separation {n} (φ : set.Formula (Fin n ⊕ Fin 1)) : zfAxioms (axiomOfSeparation φ)
+| collection {n} (φ : set.Formula (Fin n ⊕ Fin 2)) : zfAxioms (axiomOfCollection φ)
 
 def Theory.zf : set.Theory :=
   setOf zfAxioms

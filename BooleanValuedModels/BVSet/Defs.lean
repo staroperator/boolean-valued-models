@@ -161,7 +161,7 @@ termination_by u
 end BVMultiset
 
 @[pp_with_univ]
-public def BVSet (B : Type u) :=
+public def BVSet (B : Type u) : Type (max u (v + 1)) :=
   {u : BVMultiset.{u, v} B // u.WellFormed}
 
 namespace BVSet

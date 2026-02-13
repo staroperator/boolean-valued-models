@@ -172,7 +172,7 @@ theorem IsExtentional.comp {f : BVSet B → B} {g : BVSet B → BVSet B}
   fun x y => by grw [hg x y]; apply hf
 
 @[fun_prop]
-theorem IsExtentional.eq {f g : BVSet B → BVSet B}
+theorem IsExtentional.beq {f g : BVSet B → BVSet B}
     (hf : IsExtentionalFun f) (hg : IsExtentionalFun g) : IsExtentional fun x => f x =ᴮ g x := by
   intro x y
   simp only
@@ -181,7 +181,7 @@ theorem IsExtentional.eq {f g : BVSet B → BVSet B}
   grw [beq_symm (f x) (g x), beq_trans', beq_symm (g x) (f y), beq_trans']
 
 @[fun_prop]
-theorem IsExtentional.mem {f g : BVSet B → BVSet B}
+theorem IsExtentional.bmem {f g : BVSet B → BVSet B}
     (hf : IsExtentionalFun f) (hg : IsExtentionalFun g) : IsExtentional fun x => f x ∈ᴮ g x := by
   intro x y
   simp only
@@ -291,7 +291,7 @@ theorem bsubset_def' : u ⊆ᴮ v = ⨅ x, x ∈ᴮ u ⇨ x ∈ᴮ v := by
   rw [bsubset_def, IsExtentional.iInf_bmem_himp (by fun_prop)]
 
 @[fun_prop]
-theorem IsExtentional.subset {f g : BVSet B → BVSet B}
+theorem IsExtentional.bsubset {f g : BVSet B → BVSet B}
     (hf : IsExtentionalFun f) (hg : IsExtentionalFun g) : IsExtentional fun x => f x ⊆ᴮ g x := by
   simp only [bsubset_def']
   fun_prop
@@ -703,16 +703,20 @@ theorem sUnion_singleton : ⋃ᴮ {u} ≈ u :=
     simp only [bmem_sUnion', bmem_singleton]
     rw [IsExtentional.iSup_beq_inf (by fun_prop)]
 
-protected def indexSep (u : BVSet.{u, v} B) (f : u.dom → B) : BVSet.{u, v} B :=
+protected def domSep (u : BVSet.{u, v} B) (f : u.dom → B) : BVSet.{u, v} B :=
   mk u.dom f
 
-theorem indexSep_bmem_bsubset : v.indexSep (· ∈ᴮ u) ⊆ᴮ u = ⊤ := by
-  simp [bsubset_def, BVSet.indexSep, val_mk_apply]
+theorem bmem_domSep {f} : u ∈ᴮ v.domSep f = ⨆ x : v, f x ⊓ u =ᴮ x := by
+  rw [BVSet.domSep, bmem_def, ← (Equiv.setCongr dom_mk).symm.iSup_comp]
+  simp [val_mk_apply]
 
-theorem bsubset_le_indexSep_bmem_beq : u ⊆ᴮ v ≤ v.indexSep (fun i => i ∈ᴮ u) =ᴮ u := by
-  rw [beq_def, indexSep_bmem_bsubset, top_inf_eq]
+theorem domSep_bmem_bsubset : v.domSep (· ∈ᴮ u) ⊆ᴮ u = ⊤ := by
+  simp [bsubset_def, BVSet.domSep, val_mk_apply]
+
+theorem bsubset_le_domSep_bmem_beq : u ⊆ᴮ v ≤ v.domSep (fun i => i ∈ᴮ u) =ᴮ u := by
+  rw [beq_def, domSep_bmem_bsubset, top_inf_eq]
   rw [bsubset_def, bsubset_def]
-  simp only [BVSet.indexSep]
+  simp only [BVSet.domSep]
   refine le_iInf fun i => iInf_le_of_le i ?_
   simp only [le_himp_iff, himp_inf_self, bmem_def, iSup_inf_eq]
   refine iSup_le fun j => le_iSup_of_le ⟨j, by simp⟩ (le_inf ?_ ?_)
@@ -722,14 +726,14 @@ theorem bsubset_le_indexSep_bmem_beq : u ⊆ᴮ v ≤ v.indexSep (fun i => i ∈
     grw [inf_le_right, val_le_bmem]
   · grw [inf_le_left, inf_le_right]
 
-theorem bsubset_le_indexSep_bmem_bsubset : u ⊆ᴮ v ≤ v.indexSep (· ∈ᴮ u) ⊆ᴮ v := by
-  conv_rhs => simp only [BVSet.indexSep, bsubset_def, val_mk_apply]
+theorem bsubset_le_domSep_bmem_bsubset : u ⊆ᴮ v ≤ v.domSep (· ∈ᴮ u) ⊆ᴮ v := by
+  conv_rhs => simp only [BVSet.domSep, bsubset_def, val_mk_apply]
   rw [bsubset_def']
   refine le_iInf fun i => iInf_le_of_le i ?_
   simp
 
 def powerset [Small.{v} B] (u : BVSet.{u, v} B) : BVSet.{u, v} B :=
-  mkI (u.dom → B) (fun f => u.indexSep f) fun f => u.indexSep f ⊆ᴮ u
+  mkI (u.dom → B) (fun f => u.domSep f) fun f => u.domSep f ⊆ᴮ u
 
 prefix:110 "𝒫ᴮ " => powerset
 
@@ -742,9 +746,9 @@ theorem bmem_powerset [Small.{v} B] : u ∈ᴮ 𝒫ᴮ v = u ⊆ᴮ v := by
     rw [inf_comm, beq_symm]
     exact bsubset_congr_left
   · refine le_iSup_of_le (fun i : v => i ∈ᴮ u) (le_inf ?_ ?_)
-    · exact bsubset_le_indexSep_bmem_bsubset
+    · exact bsubset_le_domSep_bmem_bsubset
     · rw [beq_symm]
-      exact bsubset_le_indexSep_bmem_beq
+      exact bsubset_le_domSep_bmem_beq
 
 @[fun_prop]
 theorem IsExtentionalFun.powerset [Small.{v} B] {f : BVSet B → BVSet B}
